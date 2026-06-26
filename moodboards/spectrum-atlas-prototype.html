@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{ --bg:#16181d; --panel:#1c1f27; --panel2:#23262f; --panelb:#2c303b; --ink:#eef1f6; --sub:#9aa2b2; --faint:#606878; --line:#262a34; --chip:#22262f; --chipink:#c3cad9; --softshadow:0 24px 60px rgba(0,0,0,.45); --glow:.17; }
+html[data-theme="light"]{ --bg:#ffffff; --panel:#fbfbfa; --panel2:#f4f4f1; --panelb:#e6e6e1; --ink:#191b21; --sub:#5f6573; --faint:#a3a9b5; --line:#ededea; --chip:#f1f1ee; --chipink:#3a4154; --softshadow:0 24px 60px rgba(30,35,60,.12); --glow:.09; }
+html,body{margin:0;background:var(--bg);}
+*{box-sizing:border-box;}
+</style>
+</helmet>
+
+<div style="position:relative;min-height:100vh;background:var(--bg);font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);overflow:hidden;">
+
+  <!-- TOP BAR -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 28px 0;">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <span style="font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:.02em;">Spectrum Atlas</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--sub);letter-spacing:.06em;">10 kHz → ∞ · log ν</span>
+    </div>
+    <button onClick="{{ toggleTheme }}" title="Toggle light / dark" style="width:46px;height:46px;border-radius:50%;border:1px solid var(--panelb);background:var(--chip);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:var(--ink);">
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </sc-if>
+      <sc-if value="{{ notDark }}" hint-placeholder-val="{{ true }}">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.4"></circle><path d="M12 2v2.4M12 19.6V22M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2 12h2.4M19.6 12H22M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"></path></svg>
+      </sc-if>
+    </button>
+  </div>
+
+  <!-- HERO -->
+  <div style="padding:16px 28px 244px;display:flex;flex-direction:column;align-items:center;">
+    <div style="width:100%;max-width:1280px;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--softshadow);padding:24px 40px 22px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;">
+        <div>
+          <div style="font-family:'Newsreader',serif;font-size:27px;font-weight:500;letter-spacing:-.01em;">The Electromagnetic Spectrum</div>
+          <div style="font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:var(--sub);margin-top:3px;">Everything we broadcast, navigate by, and see — on one continuous scale.</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);text-align:right;">ν, hertz (log)<br>{{ lodLabel }}</div>
+      </div>
+
+      <!-- PLOT -->
+      <div style="position:relative;height:262px;">
+
+        <!-- markers -->
+        <sc-for list="{{ markers }}" as="m" hint-placeholder-count="8">
+          <div onClick="{{ m.onClick }}" style="{{ m.wrapStyle }}">
+            <div style="{{ m.lineStyle }}"></div>
+            <div style="{{ m.dotStyle }}"></div>
+            <sc-if value="{{ m.isVisible }}" hint-placeholder-val="{{ true }}">
+              <div style="{{ m.labelStyle }}">
+                <div style="width:74px;height:13px;border-radius:3px;background:linear-gradient(90deg,#E23B3B,#FF7A00,#FFD400,#46D160,#00B4D8,#3457D5,#7A2BE2);margin-bottom:4px;"></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink);font-weight:500;">Visible light</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--sub);">700→390 nm</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ m.notVisible }}" hint-placeholder-val="{{ true }}">
+              <div style="{{ m.labelStyle }}">
+                <div style="font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;">{{ m.name }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--sub);white-space:nowrap;">{{ m.freq }}</div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        <!-- region labels -->
+        <div style="position:absolute;left:0;right:0;top:104px;height:16px;font-family:'Hanken Grotesk',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;">
+          <span style="position:absolute;left:12.4%;transform:translateX(-50%);color:#FF5470;">Radio</span>
+          <span style="position:absolute;left:33.2%;transform:translateX(-50%);color:#FF9A3D;">Microwave</span>
+          <span style="position:absolute;left:50.3%;transform:translateX(-50%);color:#FF6B3D;">Infrared</span>
+          <span style="position:absolute;left:64.9%;transform:translateX(-50%);color:#7C5CFF;">UV</span>
+          <span style="position:absolute;left:77.6%;transform:translateX(-50%);color:#2F86FF;">X-ray</span>
+          <span style="position:absolute;left:93%;transform:translateX(-50%);color:#C44CF0;">Gamma</span>
+        </div>
+
+        <!-- glow underlay -->
+        <div style="{{ glowStyle }}"></div>
+        <!-- the band: continuous blended gradient -->
+        <div style="position:absolute;left:0;right:0;top:118px;height:58px;border-radius:7px 0 0 7px;overflow:hidden;background:linear-gradient(90deg,#FF5470 0%,#FF5470 24.2%,#FF9A3D 25.6%,#FF9A3D 40.8%,#FF6B3D 42.2%,#FF6B3D 58.4%,#E23B3B 59.2%,#FF7A00 59.5%,#FFD400 59.75%,#46D160 60.0%,#00B4D8 60.2%,#3457D5 60.4%,#7A2BE2 60.6%,#7C5CFF 61.6%,#7C5CFF 68.6%,#2F86FF 70.0%,#2F86FF 85.3%,#C44CF0 86.7%,#C44CF0 calc(100% - 0.375rem),rgba(196,76,240,0) 100%);"></div>
+
+        <!-- ITU band row -->
+        <sc-if value="{{ showBands }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:0;right:0;top:180px;height:15px;">
+            <sc-for list="{{ bandRow }}" as="b" hint-placeholder-count="7"><div style="{{ b.style }}">{{ b.abbr }}</div></sc-for>
+          </div>
+        </sc-if>
+
+        <!-- axis ticks (freq + optional wavelength) -->
+        <div style="position:absolute;left:0;right:0;top:202px;height:60px;border-top:1px solid var(--line);">
+          <div style="position:absolute;right:-7px;top:-4.5px;width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-left:8px solid var(--faint);"></div>
+          <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="10">
+            <div style="{{ t.wrap }}">
+              <div style="{{ t.mark }}"></div>
+              <div style="{{ t.lab }}">{{ t.label }}</div>
+              <sc-if value="{{ showLambda }}" hint-placeholder-val="{{ true }}"><div style="{{ t.lamLab }}">{{ t.lambda }}</div></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ showLambda }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;right:0;top:24px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--faint);">λ →</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM DOCK -->
+  <div style="position:fixed;left:18px;right:18px;bottom:0;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:16px 16px 0 0;box-shadow:0 -18px 50px rgba(0,0,0,.30);z-index:50;">
+    <div onClick="{{ toggleDock }}" style="display:flex;align-items:center;justify-content:space-between;padding:9px 22px;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:34px;height:4px;border-radius:2px;background:var(--panelb);"></div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--sub);text-transform:uppercase;">Controls</span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--sub);">{{ dockChevron }}</span>
+    </div>
+    <sc-if value="{{ dockOpen }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:0;width:100%;padding:16px 22px 22px;border-top:1px solid var(--line);">
+
+      <!-- Layers -->
+      <div style="width:238px;flex-shrink:0;padding-right:20px;border-right:1px solid var(--line);">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:11px;">Content layers</div>
+        <sc-for list="{{ layersArr }}" as="l" hint-placeholder-count="5">
+          <div onClick="{{ l.onClick }}" style="{{ l.rowStyle }}">
+            <span style="{{ l.dotStyle }}"></span>
+            <span style="flex:1;font-family:'Hanken Grotesk',sans-serif;font-size:12.5px;font-weight:500;">{{ l.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);">{{ l.count }}</span>
+            <span style="{{ l.switchStyle }}"><span style="{{ l.knobStyle }}"></span></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Amateur licence -->
+      <div style="width:236px;flex-shrink:0;padding:0 20px;border-right:1px solid var(--line);">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:11px;">Operator licence</div>
+        <sc-for list="{{ licenseArr }}" as="c" hint-placeholder-count="4">
+          <div onClick="{{ c.onClick }}" style="{{ c.style }}">
+            <span style="{{ c.dotStyle }}"></span>
+            <div style="min-width:0;">
+              <div style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;line-height:1.2;">{{ c.label }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--sub);line-height:1.3;">{{ c.note }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Detail level + axis -->
+      <div style="width:248px;flex-shrink:0;padding:0 20px;border-right:1px solid var(--line);">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:11px;">Detail level</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">
+          <sc-for list="{{ lodArr }}" as="d" hint-placeholder-count="4"><div onClick="{{ d.onClick }}" style="{{ d.style }}"><span style="{{ d.dotStyle }}"></span>{{ d.label }}</div></sc-for>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:9px;">Axis &amp; scale</div>
+        <div onClick="{{ toggleExp }}" style="{{ chkExpRow }}"><span style="{{ chkExpBox }}">{{ chkExpMark }}</span>Scientific notation (10ⁿ)</div>
+        <div onClick="{{ toggleLambda }}" style="{{ chkLamRow }}"><span style="{{ chkLamBox }}">{{ chkLamMark }}</span>Wavelength λ (metres)</div>
+        <div style="display:flex;align-items:center;gap:9px;padding:6px 2px;font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;color:var(--sub);cursor:default;"><span style="width:15px;height:15px;border-radius:4px;border:1.5px solid var(--panelb);flex-shrink:0;"></span>Accurate visible band width</div>
+      </div>
+
+      <!-- Inspector -->
+      <div style="flex:1;padding-left:20px;min-width:0;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:10px;">Inspector</div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span style="font-family:'Hanken Grotesk',sans-serif;font-size:18px;font-weight:700;">{{ sel.name }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--sub);">{{ sel.freq }}</span>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--sub);margin:3px 0 10px;">{{ sel.band }} · {{ sel.region }} · {{ sel.note }}</div>
+        <sc-if value="{{ sel.isAmateur }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ sel.licPill }}">{{ sel.licText }}</div>
+        </sc-if>
+        <sc-if value="{{ sel.isHam }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;height:18px;border-radius:5px;overflow:hidden;border:1px solid var(--line);margin-top:9px;">
+            <sc-for list="{{ sel.hamSegs }}" as="s" hint-placeholder-count="5"><div style="{{ s.style }}"></div></sc-for>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--faint);margin-top:4px;"><span>14.000</span><span>{{ sel.hamNote }}</span><span>14.350 MHz</span></div>
+        </sc-if>
+        <div style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;color:var(--sub);line-height:1.5;margin-top:9px;">{{ sel.alloc }}</div>
+      </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme:'dark', dockOpen:true, selected:'wifi', lod:2,
+    layers:{ consumer:true, amateur:true, navigation:true, gov:true, science:true },
+    license:'general', showExp:false, showLambda:false };
+
+  componentDidMount(){ document.documentElement.dataset.theme = this.state.theme; }
+  componentDidUpdate(){ document.documentElement.dataset.theme = this.state.theme; }
+
+  renderVals(){
+    const S=this.state, dark=S.theme==='dark';
+    const set=(p)=>this.setState(p);
+    const pos=(f)=> (Math.log10(f)-4)/18*100;
+    const sup={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+    const supStr=(n)=>String(n).split('').map(c=>sup[c]||c).join('');
+    const fmtLambda=(val)=>{ const u=[['km',1e3],['m',1],['cm',1e-2],['mm',1e-3],['µm',1e-6],['nm',1e-9],['pm',1e-12],['fm',1e-15]]; for(const [nm,f] of u){ if(val>=f){ const v=val/f; return (v>=10?Math.round(v):Number(v.toFixed(1)))+' '+nm; } } return '—'; };
+
+    const catColor={ consumer:'#2FB3A0', amateur:'#C44CF0', navigation:'#3E8BFF', gov:'#FF9A3D', science:'#46D160' };
+    const rank={unlic:0,tech:1,general:2,extra:3};
+    const licName={0:'Unlicensed',1:'Technician',2:'General',3:'Extra'};
+
+    // ---------- ALLOCATION DATA ----------
+    const M=[
+      { id:'am',  name:'AM radio',  f:1e6,    cat:'consumer',   minLod:2, band:'MF · medium frequency', region:'Radio', note:'535–1605 kHz', alloc:'AM broadcast. Amplitude-modulated; long groundwave range at night.' },
+      { id:'cb',  name:'CB radio',  f:27e6,   cat:'amateur',    minLod:2, reqLic:0, band:'HF · 11 m', region:'Radio', note:'26.9–27.4 MHz', alloc:'Citizens Band — license-free voice, 40 channels, 4 W.' },
+      { id:'mri', name:'MRI RF',    f:64e6,   cat:'science',    minLod:3, band:'VHF', region:'Radio', note:'≈64 MHz (1.5 T)', alloc:'The RF pulse that flips proton spins inside a 1.5-tesla MRI magnet.' },
+      { id:'fm',  name:'FM radio',  f:98e6,   cat:'consumer',   minLod:2, band:'VHF · very high frequency', region:'Radio', note:'88–108 MHz', alloc:'FM broadcast. Wideband stereo, line-of-sight propagation.' },
+      { id:'noaa',name:'NOAA wx sat',f:137e6, cat:'gov',        minLod:3, band:'VHF', region:'Radio', note:'137 MHz APT', alloc:'Polar weather-satellite image downlink — receivable with a simple antenna.' },
+      { id:'ham20',name:'20 m ham', f:14e6,   cat:'amateur',    minLod:2, reqLic:2, isHam:true, band:'HF · high frequency', region:'Radio', note:'14.000–14.350 MHz', alloc:'Premier HF DX band. CW, digital and SSB phone segments by licence class.' },
+      { id:'2m',  name:'2 m ham',   f:146e6,  cat:'amateur',    minLod:3, reqLic:1, band:'VHF', region:'Radio', note:'144–148 MHz', alloc:'Local repeater / simplex band. Technician class and up.' },
+      { id:'tv',  name:'TV (UHF)',  f:600e6,  cat:'consumer',   minLod:3, band:'UHF', region:'Radio', note:'470–698 MHz', alloc:'Digital TV broadcast (ATSC). Also reused for cellular post-repack.' },
+      { id:'frs', name:'FRS / GMRS',f:465e6,  cat:'amateur',    minLod:3, reqLic:0, band:'UHF', region:'Radio', note:'462–467 MHz', alloc:'Family Radio — license-free walkie-talkies (GMRS needs a no-test permit).' },
+      { id:'adsb',name:'ADS-B',     f:1.09e9, cat:'navigation', minLod:3, band:'UHF', region:'Microwave', note:'1090 MHz', alloc:'Aircraft position broadcast. Trackable with a cheap SDR dongle.' },
+      { id:'gps', name:'GPS L1',    f:1.575e9,cat:'navigation', minLod:2, band:'UHF', region:'Microwave', note:'1.575 GHz', alloc:'GNSS positioning. Spread-spectrum, ~−130 dBm at the ground.' },
+      { id:'goes',name:'GOES sat',  f:1.69e9, cat:'gov',        minLod:3, band:'L-band', region:'Microwave', note:'1.69 GHz', alloc:'Geostationary weather-satellite imagery downlink.' },
+      { id:'wifi',name:'Wi-Fi 2.4', f:2.45e9, cat:'consumer',   minLod:2, band:'UHF · ISM 13 cm', region:'Microwave', note:'2.400–2.4835 GHz', alloc:'Shared ISM band: Wi-Fi ch 1/6/11, Bluetooth, Zigbee, microwave ovens.' },
+      { id:'5g',  name:'5G n77',    f:3.7e9,  cat:'consumer',   minLod:3, band:'SHF', region:'Microwave', note:'3.3–4.2 GHz', alloc:'5G mid-band — the capacity workhorse for modern cellular.' },
+      { id:'wifi5',name:'Wi-Fi 5',  f:5.5e9,  cat:'consumer',   minLod:3, band:'SHF', region:'Microwave', note:'5.15–5.85 GHz', alloc:'5 GHz Wi-Fi — more channels, shorter range than 2.4 GHz.' },
+      { id:'radar',name:'Wx radar', f:9.4e9,  cat:'gov',        minLod:3, band:'X-band', region:'Microwave', note:'9.4 GHz', alloc:'Weather / marine radar. Pulsed, high peak power.' },
+      { id:'ir',  name:'IR heat',   f:30e12,  cat:'science',    minLod:3, band:'Infrared', region:'Infrared', note:'≈30 THz', alloc:'Thermal infrared — heat lamps, night vision, TV remotes nearby.' },
+      { id:'vis', name:'Visible',   f:5.4e14, cat:'science',    minLod:2, isVisible:true, band:'Visible light', region:'Visible', note:'390–700 nm', alloc:'The single octave the eye detects — a sliver of the whole spectrum.' },
+      { id:'uv',  name:'UV-C',      f:1e15,   cat:'science',    minLod:3, band:'Ultraviolet', region:'UV', note:'≈1 PHz', alloc:'Germicidal ultraviolet; also the cause of sunburn at longer UV.' },
+      { id:'xray',name:'Medical X-ray',f:3e18,cat:'science',    minLod:2, band:'X-ray', region:'X-ray', note:'≈3 EHz', alloc:'Diagnostic radiography & CT. Ionising; tightly dose-controlled.' }
+    ];
+
+    // visible markers (layer on + within lod), counts per layer
+    const counts={ consumer:0, amateur:0, navigation:0, gov:0, science:0 };
+    M.forEach(m=>{ if(S.lod>=m.minLod) counts[m.cat]++; });
+    let vis = M.filter(m=> S.layers[m.cat] && S.lod>=m.minLod);
+    vis = vis.slice().sort((a,b)=>a.f-b.f);
+    const markers = vis.map((m,i)=>{
+      const seld = S.selected===m.id;
+      const lvl = i%3;
+      const labelTop = lvl===0 ? 2 : lvl===1 ? 32 : 62;
+      const lineTop = labelTop + 24;
+      const c = catColor[m.cat];
+      return {
+        name:m.name, freq:fmtFreq(m.f), isVisible:!!m.isVisible, notVisible:!m.isVisible,
+        wrapStyle:{ position:'absolute', left:pos(m.f)+'%', top:'0', bottom:'0', width:'0', zIndex: seld?6:4, cursor:'pointer' },
+        _id:m.id,
+        lineStyle:{ position:'absolute', left:'0', transform:'translateX(-50%)', top:lineTop+'px', height:(145-lineTop)+'px', width: seld?'2px':'1px', background: seld?c:'var(--panelb)' },
+        dotStyle:{ position:'absolute', left:'0', top: seld?'140px':'142px', transform:'translateX(-50%)', width: seld?'14px':'10px', height: seld?'14px':'10px', borderRadius:'50%', background:c, border:'2px solid var(--panel)', boxShadow: seld?('0 0 0 3px '+c+'33, 0 0 10px '+c):'0 0 6px rgba(0,0,0,.4)' },
+        labelStyle:{ position:'absolute', top:labelTop+'px', left:'0', transform:'translateX(-50%)', textAlign:'center', padding: seld?'5px 9px':'4px 8px', borderRadius:'8px', background: seld?'var(--panel2)':'transparent', border: seld?('1px solid '+c+'66'):'1px solid transparent', cursor:'pointer' }
+      };
+    });
+    // attach click handlers
+    markers.forEach(mm=>{ mm.onClick = ()=>set({selected:mm._id}); });
+    // bind onClick into wrap (whole marker clickable)
+    const markers2 = markers.map(mm=>({ ...mm, wrapStyle:mm.wrapStyle }));
+    function fmtFreq(f){
+      const u=[['ZHz',1e21],['EHz',1e18],['PHz',1e15],['THz',1e12],['GHz',1e9],['MHz',1e6],['kHz',1e3],['Hz',1]];
+      for(const [nm,s] of u){ if(f>=s){ const v=f/s; return (v>=10?Math.round(v):Number(v.toFixed(2)))+' '+nm; } }
+      return f+' Hz';
+    }
+
+    // ---------- AXIS TICKS ----------
+    const names={6:'1 MHz',9:'1 GHz',12:'1 THz',15:'1 PHz',18:'1 EHz',21:'1 ZHz',4:'10 kHz',5:'100 kHz',7:'10 MHz',8:'100 MHz',10:'10 GHz',11:'100 GHz',13:'10 THz',14:'100 THz',16:'10 PHz',17:'100 PHz',19:'10 EHz',20:'100 EHz',22:'10 ZHz'};
+    const showBands = S.lod>=1;
+    const ticks=[];
+    for(let i=0;i<=18;i++){
+      const exp=4+i, x=i/18*100, major=(exp%3===0);
+      if(!major && !showBands) continue;
+      let label='';
+      if(major) label = names[exp] + (S.showExp? ' · 10'+supStr(exp) : '');
+      else if(S.showExp) label = '10'+supStr(exp);
+      ticks.push({
+        label,
+        lambda: fmtLambda(3e8/Math.pow(10,exp)),
+        wrap:{ position:'absolute', left:x+'%', top:'0', transform:'translateX(-50%)', display:'flex', flexDirection:'column', alignItems:'center' },
+        mark:{ width:'1px', height: major?'8px':'4px', background:'var(--faint)' },
+        lab:{ fontFamily:"'IBM Plex Mono',monospace", fontSize: major?'9px':'8px', color: major?'var(--sub)':'var(--faint)', marginTop:'4px', whiteSpace:'nowrap' },
+        lamLab:{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'8px', color:'#46D160', marginTop:'5px', whiteSpace:'nowrap', opacity:.9 }
+      });
+    }
+
+    // ---------- ITU BAND ROW ----------
+    const bandDefs=[['LF',2.65,8.20],['MF',8.20,13.76],['HF',13.76,19.31],['VHF',19.31,24.87],['UHF',24.87,30.43],['SHF',30.43,35.98],['EHF',35.98,41.54]];
+    const bandRow=bandDefs.map(([abbr,x0,x1])=>({ abbr, style:{ position:'absolute', left:x0+'%', width:(x1-x0)+'%', top:'0', bottom:'0', borderLeft:'1px solid var(--line)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'IBM Plex Mono',monospace", fontSize:'8.5px', color:'var(--faint)', letterSpacing:'.05em' } }));
+
+    // ---------- LAYERS ----------
+    const layerDefs=[['consumer','Consumer / everyday'],['amateur','Amateur + unlicensed'],['navigation','Navigation / aviation'],['gov','Gov / satellite'],['science','Physical science']];
+    const layersArr=layerDefs.map(([key,label])=>{
+      const on=S.layers[key], c=catColor[key];
+      return {
+        label, count: counts[key]+'',
+        onClick: ()=> set(st=>({layers:{...st.layers,[key]:!st.layers[key]}})),
+        rowStyle:{ display:'flex', alignItems:'center', gap:'9px', padding:'6px 8px', borderRadius:'8px', cursor:'pointer', marginBottom:'2px', background: on?'var(--chip)':'transparent', opacity: on?1:0.5 },
+        dotStyle:{ width:'12px', height:'12px', borderRadius:'4px', background:c, flexShrink:0, boxShadow: on?('0 0 7px '+c+'88'):'none' },
+        switchStyle:{ width:'30px', height:'17px', borderRadius:'9px', background: on?c:'var(--panelb)', position:'relative', flexShrink:0, transition:'background .15s' },
+        knobStyle:{ position:'absolute', top:'2px', left: on?'15px':'2px', width:'13px', height:'13px', borderRadius:'50%', background:'#fff', transition:'left .15s', boxShadow:'0 1px 2px rgba(0,0,0,.3)' }
+      };
+    });
+
+    // ---------- LICENCE ----------
+    const licDefs=[['unlic','Unlicensed','FRS · GMRS · CB · MURS'],['tech','Technician','VHF/UHF + a little HF'],['general','General','most HF bands open'],['extra','Amateur Extra','full privileges']];
+    const licenseArr=licDefs.map(([key,label,note])=>{
+      const act=S.license===key;
+      return { label, note, onClick:()=>set({license:key}),
+        style:{ display:'flex', alignItems:'center', gap:'9px', padding:'6px 9px', borderRadius:'8px', cursor:'pointer', marginBottom:'3px', background: act?'rgba(196,76,240,.16)':'transparent', border: act?'1px solid #C44CF066':'1px solid transparent' },
+        dotStyle:{ width:'9px', height:'9px', borderRadius:'50%', flexShrink:0, background: act?'#C44CF0':'var(--panelb)', boxShadow: act?'0 0 8px #C44CF0':'none' } };
+    });
+
+    // ---------- LOD ----------
+    const lodDefs=['Regions','ITU bands','Allocations','Channels'];
+    const lodArr=lodDefs.map((label,i)=>{
+      const act=S.lod===i;
+      return { label, onClick:()=>set({lod:i}),
+        style:{ display:'flex', alignItems:'center', gap:'9px', padding:'6px 10px', borderRadius:'8px', cursor:'pointer', fontFamily:"'Hanken Grotesk',sans-serif", fontSize:'12.5px', fontWeight: act?600:500, color: act?'var(--ink)':'var(--sub)', background: act?'var(--chip)':'transparent', border: act?'1px solid var(--panelb)':'1px solid transparent' },
+        dotStyle:{ width:'7px', height:'7px', borderRadius:'50%', background: act?'#2FB3A0':'var(--faint)', flexShrink:0 } };
+    });
+
+    // ---------- INSPECTOR ----------
+    let selM = M.find(m=>m.id===S.selected);
+    if(!selM || !(S.layers[selM.cat] && S.lod>=selM.minLod)) selM = vis[0] || M.find(m=>m.id==='vis');
+    const selRank=rank[S.license];
+    const isAm = selM.reqLic!==undefined;
+    let licText='', licOk=false;
+    if(isAm){
+      const r=selM.reqLic; licOk = selRank>=r;
+      if(r===0) licText='✓ License-free — anyone may transmit';
+      else if(licOk) licText='✓ '+licName[selRank]+' licence covers this band';
+      else licText='✗ Requires '+licName[r]+' (you have '+licName[selRank]+')';
+    }
+    const hamModes=[['#3E8BFF',0,7.14,3],['#2FB3A0',7.14,42.86,2],['#FF7A45',42.86,50,3],['#FF9A3D',50,64.29,3],['#FFB13D',64.29,100,2]];
+    const hamSegs=hamModes.map(([col,x0,x1,minRank])=>{ const en=selRank>=minRank; return { style:{ position:'absolute', left:x0+'%', width:(x1-x0)+'%', top:'0', bottom:'0', background: en?col:'var(--panelb)', opacity: en?1:0.4 } }; });
+    const hamNote = selRank>=3?'full band' : selRank>=2?'General privileges' : selRank>=1?'Technician: no 20 m HF voice' : 'No amateur privileges';
+    const sel = {
+      name:selM.name, freq:fmtFreq(selM.f), band:selM.band, region:selM.region, note:selM.note||'',
+      alloc:selM.alloc||'', isAmateur:isAm, isHam:!!selM.isHam, hamSegs, hamNote,
+      licText, licPill:{ display:'inline-block', fontFamily:"'Hanken Grotesk',sans-serif", fontSize:'11.5px', fontWeight:600, padding:'4px 10px', borderRadius:'7px', background: licOk||(selM.reqLic===0)?'rgba(47,179,160,.16)':'rgba(255,90,90,.14)', color: licOk||(selM.reqLic===0)?'#2FB3A0':'#FF6B6B', border:'1px solid '+(licOk||(selM.reqLic===0)?'#2FB3A055':'#FF6B6B55') }
+    };
+
+    // ---------- axis checkbox styles ----------
+    const chkRow=(on)=>({ display:'flex', alignItems:'center', gap:'9px', padding:'6px 2px', fontFamily:"'Hanken Grotesk',sans-serif", fontSize:'11.5px', color: on?'var(--ink)':'var(--sub)', cursor:'pointer' });
+    const chkBox=(on)=>({ width:'15px', height:'15px', borderRadius:'4px', border:'1.5px solid '+(on?'#2FB3A0':'var(--panelb)'), background: on?'#2FB3A0':'transparent', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'10px', lineHeight:1 });
+
+    return {
+      isDark:dark, notDark:!dark, themeLabel:dark?'Dark':'Light',
+      toggleTheme:()=>set(st=>({theme:st.theme==='dark'?'light':'dark'})),
+      knobStyle:{ position:'absolute', top:'3px', left:dark?'4px':'54px', width:'26px', height:'26px', borderRadius:'50%', background:'var(--ink)', transition:'left .22s ease' },
+      lodLabel: ['Detail: regions','Detail: ITU bands','Detail: allocations','Detail: channels'][S.lod],
+      glowStyle:{ position:'absolute', left:'0', right:'0', top:'120px', height:'54px', borderRadius:'10px', filter:'blur(15px)', opacity:'var(--glow)', background:'linear-gradient(90deg,#FF5470 12%,#FF9A3D 33%,#FF6B3D 50%,#46D160 60%,#7C5CFF 65%,#2F86FF 78%,#C44CF0 93%)', pointerEvents:'none' },
+      showBands, ticks, bandRow, markers:markers2, layersArr, licenseArr, lodArr, sel, showLambda:S.showLambda,
+      toggleExp:()=>set(st=>({showExp:!st.showExp})), toggleLambda:()=>set(st=>({showLambda:!st.showLambda})),
+      chkExpRow:chkRow(S.showExp), chkExpBox:chkBox(S.showExp), chkExpMark:S.showExp?'✓':'',
+      chkLamRow:chkRow(S.showLambda), chkLamBox:chkBox(S.showLambda), chkLamMark:S.showLambda?'✓':'',
+      dockOpen:S.dockOpen, toggleDock:()=>set(st=>({dockOpen:!st.dockOpen})), dockChevron:S.dockOpen?'▾':'▴'
+    };
+  }
+}
+</script>
+</body>
+</html>

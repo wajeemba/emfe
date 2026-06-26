@@ -1,0 +1,12 @@
+# Local dev tooling — Addy Osmani's agent-skills (MIT). Kept project-local,
+# not part of the shipped product, so it stays out of the repo.
+/.claude/skills/
+/.claude/agents/
+/.claude/commands/
+/.claude/references/
+
+# node
+node_modules/
+dist/
+.DS_Store
+.netlify/
