@@ -19,12 +19,7 @@
 <button type="button" class="trigger" onclick={open}>Sources</button>
 
 <!-- Native <dialog> handles focus trapping, Esc-to-close, and focus return for free. -->
-<dialog
-	bind:this={dialog}
-	class="modal"
-	aria-labelledby="sources-title"
-	onclick={onDialogClick}
->
+<dialog bind:this={dialog} class="modal" aria-labelledby="sources-title" onclick={onDialogClick}>
 	<div class="panel">
 		<header>
 			<h2 id="sources-title">Sources &amp; provenance</h2>
@@ -36,6 +31,8 @@
 				<li>
 					<div class="title">
 						{#if s.url}
+							<!-- External source URL (absolute https), not an internal SvelteKit route. -->
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 							<a href={s.url} target="_blank" rel="noreferrer noopener">{s.title}</a>
 						{:else}
 							{s.title}

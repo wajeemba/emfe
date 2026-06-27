@@ -14,7 +14,9 @@ test('sources modal opens, lists origins, and closes via Esc with focus returned
 	await expect(dialog.getByRole('heading', { name: /Sources & provenance/ })).toBeVisible();
 
 	// Lists the distinct referenced sources (FCC ToFA, Part 97, NASA EMS at minimum).
-	await expect(dialog.getByRole('link', { name: /FCC Table of Frequency Allocations/ })).toBeVisible();
+	await expect(
+		dialog.getByRole('link', { name: /FCC Table of Frequency Allocations/ })
+	).toBeVisible();
 	await expect(dialog.getByRole('link', { name: /NASA Science/ })).toBeVisible();
 
 	// Esc closes the dialog and returns focus to the trigger.

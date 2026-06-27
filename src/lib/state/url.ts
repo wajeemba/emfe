@@ -75,11 +75,7 @@ export function decodeState(
 	const zoom = Number.isFinite(rawZoom) && rawZoom > 0 ? clampZoom(rawZoom) : 1;
 
 	const rawCenter = Number(params.get('c'));
-	const centerExp = clampCenter(
-		Number.isFinite(rawCenter) ? rawCenter : midExp(full),
-		full,
-		zoom
-	);
+	const centerExp = clampCenter(Number.isFinite(rawCenter) ? rawCenter : midExp(full), full, zoom);
 
 	const rawLic = params.get('lic');
 	const license: LicenseRank = (LICENSE_RANKS as readonly string[]).includes(rawLic ?? '')

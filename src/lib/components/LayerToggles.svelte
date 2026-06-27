@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LAYERS, type LayerId } from '$lib/data/types';
+	import { LAYERS } from '$lib/data/types';
 	import { layerCounts } from '$lib/spectrum/filter';
 	import type { Lod } from '$lib/spectrum/lod';
 	import { allocations } from '$lib/data/loader';

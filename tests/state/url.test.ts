@@ -1,15 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import {
-	encodeState,
-	decodeState,
-	discreteChanged,
-	type DeepLinkSnapshot
-} from '$lib/state/url';
+import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
 import { LAYERS, type LayerId } from '$lib/data/types';
 import { FULL_DOMAIN } from '$lib/spectrum/scale';
 
-const allOn = () =>
-	Object.fromEntries(LAYERS.map((l) => [l, true])) as Record<LayerId, boolean>;
+const allOn = () => Object.fromEntries(LAYERS.map((l) => [l, true])) as Record<LayerId, boolean>;
 
 const DEFAULTS: DeepLinkSnapshot = {
 	centerExp: 12,
@@ -102,8 +96,8 @@ describe('discreteChanged', () => {
 	it('is true when a filter, theme, or selection changes', () => {
 		expect(discreteChanged(DEFAULTS, { ...DEFAULTS, theme: 'light' })).toBe(true);
 		expect(discreteChanged(DEFAULTS, { ...DEFAULTS, selected: 'fm' })).toBe(true);
-		expect(
-			discreteChanged(DEFAULTS, { ...DEFAULTS, layers: { ...allOn(), gov: false } })
-		).toBe(true);
+		expect(discreteChanged(DEFAULTS, { ...DEFAULTS, layers: { ...allOn(), gov: false } })).toBe(
+			true
+		);
 	});
 });

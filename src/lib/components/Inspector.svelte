@@ -69,6 +69,8 @@
 	<div class="source">
 		Source:
 		{#if allocation.source.url}
+			<!-- External source URL (absolute https), not an internal SvelteKit route. -->
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 			<a href={allocation.source.url} target="_blank" rel="noreferrer noopener">
 				{allocation.source.title}
 			</a>
