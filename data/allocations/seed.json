@@ -1,5 +1,65 @@
 [
 	{
+		"id": "schumann",
+		"name": "Schumann resonance",
+		"hz": 7.83,
+		"layer": "science",
+		"region": "radio",
+		"minLod": 1,
+		"note": "The Earth–ionosphere cavity ringing at ≈7.83 Hz — the planet's natural EM heartbeat.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "powerline",
+		"name": "AC mains",
+		"hz": 60,
+		"layer": "consumer",
+		"region": "radio",
+		"minLod": 1,
+		"note": "Power-line hum — the 60 Hz that runs North America (50 Hz across much of the world).",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "sub-elf",
+		"name": "Navy ELF",
+		"hz": 76,
+		"layer": "gov",
+		"region": "radio",
+		"minLod": 2,
+		"note": "US Navy ELF — 76 Hz signalling that reaches submerged submarines, a few bits per minute.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "vlf",
+		"name": "VLF time/nav",
+		"hz": 24000,
+		"layer": "gov",
+		"region": "radio",
+		"minLod": 2,
+		"note": "Very low frequency (24 kHz) — global time/sync broadcasts that penetrate seawater to subs.",
+		"source": "itu-rr"
+	},
+	{
+		"id": "wwvb",
+		"name": "WWVB clock",
+		"hz": 60000,
+		"layer": "consumer",
+		"region": "radio",
+		"minLod": 2,
+		"note": "WWVB 60 kHz time code — what 'atomic' wall clocks quietly sync to overnight.",
+		"source": "fcc-tofa"
+	},
+	{
+		"id": "ndb",
+		"name": "Aviation NDB",
+		"hz": 350000,
+		"layer": "navigation",
+		"region": "radio",
+		"minLod": 2,
+		"note": "Non-directional beacons (LF) — among the oldest radio navaids still in service.",
+		"source": "fcc-tofa"
+	},
+	{
 		"id": "am",
 		"name": "AM radio",
 		"hz": 1000000,
@@ -174,6 +234,46 @@
 		"source": "fcc-tofa"
 	},
 	{
+		"id": "5g-mmwave",
+		"name": "5G mmWave",
+		"hz": 28000000000,
+		"layer": "consumer",
+		"region": "microwave",
+		"minLod": 3,
+		"note": "5G mmWave (n261, 28 GHz) — enormous capacity over a single city block.",
+		"source": "fcc-tofa"
+	},
+	{
+		"id": "wigig",
+		"name": "WiGig 60",
+		"hz": 60000000000,
+		"layer": "consumer",
+		"region": "microwave",
+		"minLod": 3,
+		"note": "60 GHz WiGig (802.11ad) — multi-gigabit links that oxygen absorption stops at the wall.",
+		"source": "fcc-tofa"
+	},
+	{
+		"id": "cmb",
+		"name": "Cosmic microwave bg",
+		"hz": 160000000000,
+		"layer": "science",
+		"region": "microwave",
+		"minLod": 2,
+		"note": "The 2.7 K afterglow of the Big Bang — its blackbody spectrum peaks near 160 GHz.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "thz",
+		"name": "Terahertz",
+		"hz": 1000000000000,
+		"layer": "science",
+		"region": "infrared",
+		"minLod": 3,
+		"note": "Terahertz 'T-rays' (1 THz) — airport body scanners and the band science learned to use last.",
+		"source": "nasa-ems"
+	},
+	{
 		"id": "ir",
 		"name": "IR heat",
 		"hz": 30000000000000,
@@ -181,6 +281,16 @@
 		"region": "infrared",
 		"minLod": 3,
 		"note": "Thermal infrared (≈30 THz) — heat lamps, night vision, TV remotes nearby.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "fiber",
+		"name": "Fibre-optic telecom",
+		"hz": 193000000000000,
+		"layer": "consumer",
+		"region": "infrared",
+		"minLod": 1,
+		"note": "Near-infrared (1550 nm) — the light that carries the internet through fibre under the oceans.",
 		"source": "nasa-ems"
 	},
 	{
@@ -195,6 +305,16 @@
 		"source": "nasa-ems"
 	},
 	{
+		"id": "uva",
+		"name": "UV-A",
+		"hz": 821000000000000,
+		"layer": "science",
+		"region": "uv",
+		"minLod": 3,
+		"note": "UV-A (≈365 nm) — blacklight glow, ink curing, and most of a suntan.",
+		"source": "nasa-ems"
+	},
+	{
 		"id": "uv",
 		"name": "UV-C",
 		"hz": 1000000000000000,
@@ -205,6 +325,26 @@
 		"source": "nasa-ems"
 	},
 	{
+		"id": "euv",
+		"name": "EUV lithography",
+		"hz": 22200000000000000,
+		"layer": "science",
+		"region": "uv",
+		"minLod": 3,
+		"note": "Extreme-UV (13.5 nm) — the tin-plasma light that prints today's microchips.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "xray-xtal",
+		"name": "X-ray crystallography",
+		"hz": 1930000000000000000,
+		"layer": "science",
+		"region": "xray",
+		"minLod": 3,
+		"note": "Cu Kα X-rays (8 keV) — how we read the atomic structure of proteins and DNA.",
+		"source": "nasa-ems"
+	},
+	{
 		"id": "xray",
 		"name": "Medical X-ray",
 		"hz": 3000000000000000000,
@@ -212,6 +352,36 @@
 		"region": "xray",
 		"minLod": 0,
 		"note": "Diagnostic radiography & CT (≈3 EHz). Ionising; tightly dose-controlled.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "pet",
+		"name": "PET annihilation",
+		"hz": 123000000000000000000,
+		"layer": "science",
+		"region": "gamma",
+		"minLod": 1,
+		"note": "Positron-annihilation γ-rays (511 keV) — the photons a PET scanner maps to find tumours.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "cobalt60",
+		"name": "Cobalt-60",
+		"hz": 320000000000000000000,
+		"layer": "science",
+		"region": "gamma",
+		"minLod": 2,
+		"note": "Co-60 γ-rays (≈1.3 MeV) — sterilising medical kit and treating cancer.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "cosmic-gamma",
+		"name": "Cosmic γ-rays",
+		"hz": 1e23,
+		"layer": "science",
+		"region": "gamma",
+		"minLod": 2,
+		"note": "High-energy cosmic γ-rays (~400 MeV) — light from pulsars, blazars and supernova remnants.",
 		"source": "nasa-ems"
 	}
 ]

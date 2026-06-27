@@ -34,7 +34,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 
 ## Phase 5 — Content, hardening & launch
 
-- [ ] **Task 15** — Full ELF→gamma curation + annotations _(L, dep: 3 + Open Q #1)_
+- [~] **Task 15** — Full ELF→gamma curation + annotations _(L, dep: 3 + Open Q #1)_ — _IN PROGRESS: seed expanded 20→37 (added ELF/VLF/LF below 1 MHz, mmWave/WiGig, CMB, THz, fibre, UV-A, EUV, X-ray crystallography, and the gamma region: PET/Co-60/cosmic). Full curation + non-radio research still open._
 - [ ] **Task 16** — Accessibility pass (WCAG AA) _(M, dep: 6–11)_
 - [ ] **Task 17** — e2e suite consolidation _(M, dep: 7–14)_
 - [ ] **Task 18** — Netlify deploy + CI + scheduled drift-check _(M, dep: 1 + all)_

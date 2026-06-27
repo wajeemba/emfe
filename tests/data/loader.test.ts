@@ -3,15 +3,16 @@ import { allocations, referencedSources } from '$lib/data/loader';
 
 describe('allocations loader', () => {
 	it('loads the seed dataset', () => {
-		expect(allocations.length).toBe(20);
+		expect(allocations.length).toBeGreaterThanOrEqual(20);
 	});
 
 	it('sorts ascending by representative frequency', () => {
 		for (let i = 1; i < allocations.length; i++) {
 			expect(allocations[i].hz).toBeGreaterThan(allocations[i - 1].hz);
 		}
-		expect(allocations[0].id).toBe('am');
-		expect(allocations.at(-1)?.id).toBe('xray');
+		// Spans from sub-ELF (Schumann ≈ 7.83 Hz) to high-energy gamma.
+		expect(allocations[0].id).toBe('schumann');
+		expect(allocations.at(-1)?.id).toBe('cosmic-gamma');
 	});
 
 	it('resolves each source id into a full SourceRef', () => {
@@ -27,6 +28,6 @@ describe('allocations loader', () => {
 		const ids = referencedSources()
 			.map((s) => s.id)
 			.sort();
-		expect(ids).toEqual(['fcc-part97', 'fcc-tofa', 'nasa-ems']);
+		expect(ids).toEqual(['fcc-part97', 'fcc-tofa', 'itu-rr', 'nasa-ems']);
 	});
 });

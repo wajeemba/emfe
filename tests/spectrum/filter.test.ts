@@ -37,32 +37,35 @@ describe('allocationsAtLod', () => {
 		expect(hero.map((a) => a.id).sort()).toEqual(['am', 'fm', 'gps', 'vis', 'wifi', 'xray']);
 	});
 
-	it('shows the 8 allocation-tier entries at the Allocations LOD', () => {
-		expect(allocationsAtLod(allocations, 2)).toHaveLength(8);
-		expect(allocationsAtLod(allocations, 3)).toHaveLength(20);
+	it('reveals more (never fewer) entries as the LOD deepens, up to the whole set', () => {
+		const counts = ([0, 1, 2, 3] as Lod[]).map((l) => allocationsAtLod(allocations, l).length);
+		for (let i = 1; i < counts.length; i++) {
+			expect(counts[i]).toBeGreaterThanOrEqual(counts[i - 1]);
+		}
+		expect(counts[3]).toBe(allocations.length);
 	});
 });
 
 describe('visibleAllocations', () => {
-	it('also filters by enabled content layers', () => {
-		expect(visibleAllocations(allocations, 2, allLayersOn)).toHaveLength(8);
+	it('is the LOD set intersected with the enabled content layers', () => {
+		const atLod = allocationsAtLod(allocations, 2);
+		expect(visibleAllocations(allocations, 2, allLayersOn)).toHaveLength(atLod.length);
+
 		const noScience = { ...allLayersOn, science: false };
-		// drops the two science entries at LOD 2 (Visible, Medical X-ray)
-		expect(visibleAllocations(allocations, 2, noScience)).toHaveLength(6);
-		expect(visibleAllocations(allocations, 2, noScience).every((a) => a.layer !== 'science')).toBe(
-			true
-		);
+		const got = visibleAllocations(allocations, 2, noScience);
+		expect(got).toHaveLength(atLod.filter((a) => a.layer !== 'science').length);
+		expect(got.every((a) => a.layer !== 'science')).toBe(true);
 	});
 });
 
 describe('layerCounts', () => {
-	it('counts allocations per layer at a LOD, ignoring toggles', () => {
-		expect(layerCounts(allocations, 2)).toEqual({
-			consumer: 3,
-			amateur: 2,
-			navigation: 1,
-			gov: 0,
-			science: 2
-		});
+	it('tallies allocations per layer at a LOD, ignoring toggles', () => {
+		const counts = layerCounts(allocations, 2);
+		const atLod = allocationsAtLod(allocations, 2);
+		const total = Object.values(counts).reduce((a, b) => a + b, 0);
+		expect(total).toBe(atLod.length);
+		for (const l of LAYERS) {
+			expect(counts[l]).toBe(atLod.filter((a) => a.layer === l).length);
+		}
 	});
 });
