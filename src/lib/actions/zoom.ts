@@ -20,6 +20,9 @@ import { panByFraction, zoomAbout, type ZoomView } from '$lib/spectrum/zoom';
 const ZOOM_SENSITIVITY = 0.002;
 /** Wheel-notch → pan fraction sensitivity (per delta pixel). */
 const PAN_SENSITIVITY = 0.0015;
+/** Keyboard zoom step (per +/- press) and pan step (fraction of span per arrow). */
+const KEY_ZOOM = 1.6;
+const KEY_PAN = 0.15;
 
 export interface ZoomableParams {
 	/** Current plot width in px (reactive — read fresh on each gesture). */
@@ -105,12 +108,43 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 		if (pointers.size === 1) lastPanX = [...pointers.values()][0];
 	}
 
+	// ── Keyboard: arrows pan, +/- zoom about center, 0 resets ──────────────────────────
+	function onKeyDown(event: KeyboardEvent) {
+		let handled = true;
+		switch (event.key) {
+			case '+':
+			case '=':
+				current.apply((v) => zoomAbout(v, FULL_DOMAIN, 0.5, KEY_ZOOM));
+				break;
+			case '-':
+			case '_':
+				current.apply((v) => zoomAbout(v, FULL_DOMAIN, 0.5, 1 / KEY_ZOOM));
+				break;
+			case 'ArrowLeft':
+				current.apply((v) => panByFraction(v, FULL_DOMAIN, -KEY_PAN));
+				break;
+			case 'ArrowRight':
+				current.apply((v) => panByFraction(v, FULL_DOMAIN, KEY_PAN));
+				break;
+			case '0':
+				current.apply(() => ({
+					centerExp: (FULL_DOMAIN.minExp + FULL_DOMAIN.maxExp) / 2,
+					zoom: 1
+				}));
+				break;
+			default:
+				handled = false;
+		}
+		if (handled) event.preventDefault();
+	}
+
 	// Non-passive so we can preventDefault the page scroll/gesture while interacting.
 	node.addEventListener('wheel', onWheel, { passive: false });
 	node.addEventListener('pointerdown', onPointerDown);
 	node.addEventListener('pointermove', onPointerMove, { passive: false });
 	node.addEventListener('pointerup', onPointerUp);
 	node.addEventListener('pointercancel', onPointerUp);
+	node.addEventListener('keydown', onKeyDown);
 
 	return {
 		update(next: ZoomableParams) {
@@ -122,6 +156,7 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 			node.removeEventListener('pointermove', onPointerMove);
 			node.removeEventListener('pointerup', onPointerUp);
 			node.removeEventListener('pointercancel', onPointerUp);
+			node.removeEventListener('keydown', onKeyDown);
 		}
 	};
 }

@@ -12,7 +12,7 @@
 	--panelb: #2c303b;
 	--ink: #eef1f6;
 	--sub: #9aa2b2;
-	--faint: #606878;
+	--faint: #868d9c; /* AA: ≥4.5:1 on bg/panel/chip for the small mono micro-labels */
 	--line: #262a34;
 	--chip: #22262f;
 	--chipink: #c3cad9;
@@ -59,7 +59,7 @@ html[data-theme='light'] {
 	--panelb: #e6e6e1;
 	--ink: #191b21;
 	--sub: #5f6573;
-	--faint: #a3a9b5;
+	--faint: #636a77; /* AA: ≥4.5:1 on bg/panel/chip for the small mono micro-labels */
 	--line: #ededea;
 	--chip: #f1f1ee;
 	--chipink: #3a4154;
@@ -83,4 +83,16 @@ body {
 :focus-visible {
 	outline: 2px solid var(--layer-consumer);
 	outline-offset: 2px;
+}
+
+/* Respect users who prefer reduced motion: collapse transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

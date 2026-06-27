@@ -10,6 +10,7 @@
 	import { allocations } from '$lib/data/loader';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
 	import { FULL_DOMAIN } from '$lib/spectrum/scale';
+	import { fmtFreq } from '$lib/spectrum/format';
 	import { zoomable } from '$lib/actions/zoom';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
@@ -26,6 +27,13 @@
 
 	let width = $state(0);
 	let zoomed = $derived($view.zoom > 1);
+
+	// Announce view changes to assistive tech (debounced via the polite live region).
+	let announcement = $derived(
+		`${LOD_LABELS[$lod]} detail. Showing ${fmtFreq(10 ** $visibleDomain.minExp)} to ${fmtFreq(
+			10 ** $visibleDomain.maxExp
+		)}.`
+	);
 
 	// ── Deep linking ────────────────────────────────────────────────────────────────────
 	// The URL query string is a lossless mirror of the view state (see state/url.ts).
@@ -91,6 +99,8 @@
 	/>
 </svelte:head>
 
+<a href="#explorer" class="skip-link">Skip to the spectrum explorer</a>
+
 <main>
 	<section class="card">
 		<header>
@@ -109,12 +119,18 @@
 
 		<div class="plot" style="height: {PLOT.height}px" bind:clientWidth={width}>
 			{#if width > 0}
+				<!-- Deliberately focusable: a custom-keyboard widget (arrows pan, +/- zoom) whose
+				     interactive marker children stay exposed to assistive tech. -->
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 				<svg
+					id="explorer"
 					{width}
 					height={PLOT.height}
 					viewBox="0 0 {width} {PLOT.height}"
-					role="img"
-					aria-label="Electromagnetic spectrum on a logarithmic frequency axis, 1 Hz to 10^24 Hz"
+					role="application"
+					tabindex="0"
+					aria-roledescription="spectrum explorer"
+					aria-label="Electromagnetic spectrum on a logarithmic frequency axis from 1 hertz to 10 to the 24 hertz. Use arrow keys to pan, plus and minus to zoom, and 0 to reset."
 					class="zoomable"
 					use:zoomable={{ width: () => width, apply: (fn) => view.update(fn) }}
 				>
@@ -138,6 +154,7 @@
 		</div>
 
 		<p class="hint" aria-hidden="true">Scroll to zoom · Shift-scroll to pan</p>
+		<p class="sr-only" role="status" aria-live="polite">{announcement}</p>
 	</section>
 </main>
 
@@ -160,6 +177,34 @@
 <ThemeToggle />
 
 <style>
+	.skip-link {
+		position: fixed;
+		top: -60px;
+		left: 18px;
+		z-index: 100;
+		padding: 10px 16px;
+		border-radius: 0 0 10px 10px;
+		background: var(--chip);
+		color: var(--ink);
+		font-family: var(--font-mono);
+		font-size: 12px;
+		text-decoration: none;
+		transition: top 0.15s;
+	}
+	.skip-link:focus {
+		top: 0;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
 	.zoomable {
 		cursor: crosshair;
 		touch-action: none;
