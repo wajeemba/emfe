@@ -2,9 +2,12 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-netlify';
 import { sveltekit } from '@sveltejs/kit/vite';
+import Inspect from 'vite-plugin-inspect';
 
 export default defineConfig({
 	plugins: [
+		// Dev-only module-graph + transform inspector at http://localhost:5173/__inspect/
+		Inspect(),
 		sveltekit({
 			compilerOptions: {
 				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
