@@ -1,14 +1,19 @@
 <script lang="ts">
 	import { visibleDomain, lod } from '$lib/state/view';
-	import { selection } from '$lib/state/selection';
+	import { selection, selectedAllocation } from '$lib/state/selection';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
 	import Markers from '$lib/components/Markers.svelte';
 	import RegionLabels from '$lib/components/RegionLabels.svelte';
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
+	import Dock from '$lib/components/Dock.svelte';
+	import Inspector from '$lib/components/Inspector.svelte';
 
 	let width = $state(0);
+
+	// Control panels filled in Phase 3 (Tasks 8–10).
+	const upcoming = ['Content layers', 'Operator licence', 'Detail & axis'];
 </script>
 
 <svelte:head>
@@ -51,11 +56,24 @@
 	</section>
 </main>
 
+<Dock>
+	{#each upcoming as section (section)}
+		<div class="panel placeholder">
+			<div class="panel-eyebrow">{section}</div>
+			<p class="soon">Coming in Phase 3</p>
+		</div>
+	{/each}
+	<div class="panel inspector-col">
+		<Inspector allocation={$selectedAllocation} />
+	</div>
+</Dock>
+
 <style>
 	main {
 		display: flex;
 		justify-content: center;
-		padding: 16px 28px 48px;
+		/* leave room for the fixed dock */
+		padding: 16px 28px 260px;
 	}
 
 	.card {
@@ -106,5 +124,49 @@
 
 	svg {
 		display: block;
+	}
+
+	/* dock panels */
+	.panel {
+		padding: 0 20px;
+		border-right: 1px solid var(--line);
+	}
+	.panel:first-child {
+		padding-left: 0;
+	}
+	.placeholder {
+		width: 200px;
+		flex-shrink: 0;
+	}
+	.inspector-col {
+		flex: 1;
+		min-width: 0;
+		border-right: none;
+		padding-right: 0;
+	}
+	.panel-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.14em;
+		color: var(--faint);
+		text-transform: uppercase;
+		margin-bottom: 11px;
+	}
+	.soon {
+		margin: 0;
+		font-family: var(--font-sans);
+		font-size: 11.5px;
+		color: var(--faint);
+		font-style: italic;
+	}
+
+	@media (max-width: 720px) {
+		.panel {
+			border-right: none;
+			padding: 0;
+		}
+		.placeholder {
+			width: 100%;
+		}
 	}
 </style>
