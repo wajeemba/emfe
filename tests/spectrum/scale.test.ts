@@ -8,6 +8,7 @@ import {
 	logPos,
 	posToHz,
 	wavelengthToFreq,
+	windowDomain,
 	type FreqDomain
 } from '$lib/spectrum/scale';
 
@@ -62,6 +63,29 @@ describe('clamp01', () => {
 		expect(clamp01(-2)).toBe(0);
 		expect(clamp01(0.42)).toBe(0.42);
 		expect(clamp01(3)).toBe(1);
+	});
+});
+
+describe('windowDomain', () => {
+	it('shows the whole spectrum at zoom 1', () => {
+		expect(windowDomain(FULL_DOMAIN, 12, 1)).toEqual({ minExp: 0, maxExp: 24 });
+	});
+
+	it('halves the visible span at zoom 2', () => {
+		expect(windowDomain(FULL_DOMAIN, 12, 2)).toEqual({ minExp: 6, maxExp: 18 });
+	});
+
+	it('clamps (pans back in) at the low and high edges', () => {
+		expect(windowDomain(FULL_DOMAIN, 0, 2)).toEqual({ minExp: 0, maxExp: 12 });
+		expect(windowDomain(FULL_DOMAIN, 24, 2)).toEqual({ minExp: 12, maxExp: 24 });
+	});
+
+	it('zooms deeper around the center', () => {
+		expect(windowDomain(FULL_DOMAIN, 12, 4)).toEqual({ minExp: 9, maxExp: 15 });
+	});
+
+	it('never inverts: zoom below 1 is treated as 1', () => {
+		expect(windowDomain(FULL_DOMAIN, 12, 0.5)).toEqual({ minExp: 0, maxExp: 24 });
 	});
 });
 

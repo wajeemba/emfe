@@ -23,9 +23,20 @@
 	--region-radio: #ff5470;
 	--region-microwave: #ff9a3d;
 	--region-infrared: #ff6b3d;
+	--region-visible: #46d160;
 	--region-uv: #7c5cff;
 	--region-xray: #2f86ff;
 	--region-gamma: #c44cf0;
+
+	/* Physical spectral colors for the visible band (red → violet). Wavelength-derived,
+	   not theme colors, but kept as variables so markup never hard-codes hex. */
+	--spectral-red: #e23b3b;
+	--spectral-orange: #ff7a00;
+	--spectral-yellow: #ffd400;
+	--spectral-green: #46d160;
+	--spectral-cyan: #00b4d8;
+	--spectral-blue: #3457d5;
+	--spectral-violet: #7a2be2;
 
 	/* Content-layer palette. */
 	--layer-consumer: #2fb3a0;

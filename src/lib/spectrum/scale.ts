@@ -45,6 +45,29 @@ export function clamp01(v: number): number {
 	return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
+/**
+ * The visible window for a given center + zoom over a full domain.
+ *
+ * `zoom` is the linear magnification: `1` shows the whole `full` domain; `2` shows half the
+ * decades centered on `centerExp`, etc. The window is clamped (panned back in) so it never
+ * extends past `full`. This is the seam the d3-zoom integration plugs into (Task 7).
+ */
+export function windowDomain(full: FreqDomain, centerExp: number, zoom: number): FreqDomain {
+	const span = decades(full) / Math.max(zoom, 1);
+	const half = span / 2;
+	let minExp = centerExp - half;
+	let maxExp = centerExp + half;
+	if (minExp < full.minExp) {
+		minExp = full.minExp;
+		maxExp = minExp + span;
+	}
+	if (maxExp > full.maxExp) {
+		maxExp = full.maxExp;
+		minExp = maxExp - span;
+	}
+	return { minExp: Math.max(minExp, full.minExp), maxExp: Math.min(maxExp, full.maxExp) };
+}
+
 /** Wavelength (metres) of an electromagnetic wave at the given frequency (Hz). */
 export function freqToWavelength(hz: number): number {
 	return SPEED_OF_LIGHT / hz;
