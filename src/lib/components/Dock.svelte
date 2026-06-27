@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { browser } from '$app/environment';
 
 	let { children }: { children: Snippet } = $props();
 
-	let open = $state(true);
+	// Collapsed by default on phones (the dock is fixed and would cover the plot); open on desktop.
+	let open = $state(browser ? !window.matchMedia('(max-width: 720px)').matches : true);
 </script>
 
 <section class="dock" class:open>
@@ -91,6 +93,9 @@
 		.body {
 			flex-direction: column;
 			gap: 16px;
+			/* Never let the (fixed) dock cover the whole screen — scroll its contents instead. */
+			max-height: 68vh;
+			overflow-y: auto;
 		}
 	}
 </style>

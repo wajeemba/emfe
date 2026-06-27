@@ -268,6 +268,27 @@
 		padding-right: 0;
 	}
 	@media (max-width: 720px) {
+		main {
+			/* Clear the fixed corner buttons up top; the dock collapses on mobile so the
+			   big bottom reserve is no longer needed. */
+			padding: 74px 12px 96px;
+		}
+		.card {
+			padding: 18px 16px 18px;
+			border-radius: 16px;
+		}
+		header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 6px;
+			margin-bottom: 18px;
+		}
+		.readout {
+			text-align: left;
+		}
+		h1 {
+			font-size: 22px;
+		}
 		.panel {
 			border-right: none;
 			padding: 0;

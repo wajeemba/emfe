@@ -29,7 +29,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 
 - [x] **Task 12** — Deep-link URL round-trip _(M, dep: 7–10)_ ✅
 - [ ] **Task 13** — FCC proxy endpoint + cache + snapshot fallback _(M, dep: 3,5)_
-- [ ] **Task 14** — Mobile / touch / responsive _(M, dep: 7)_
+- [x] **Task 14** — Mobile / touch / responsive _(M, dep: 7)_ ✅ _(pinch-zoom + one-finger pan; dock collapses, no overflow)_
 - [ ] **Checkpoint: Feature-complete** — deep-link + live FCC + mobile · human review
 
 ## Phase 5 — Content, hardening & launch
