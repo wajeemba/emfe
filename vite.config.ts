@@ -19,6 +19,12 @@ export default defineConfig({
 		// Unit tests live in tests/ (SPEC §Project Structure); component tests are
 		// colocated as *.svelte.{test,spec}.ts. Pass cleanly until Task 2 adds tests.
 		passWithNoTests: true,
+		coverage: {
+			provider: 'v8',
+			// Coverage targets the pure lib (SPEC: core lib ≥ 90%, overall pragmatic).
+			include: ['src/lib/**/*.{ts,svelte}'],
+			reporter: ['text', 'html']
+		},
 		projects: [
 			{
 				extends: './vite.config.ts',
