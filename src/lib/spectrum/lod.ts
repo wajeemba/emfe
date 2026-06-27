@@ -36,9 +36,9 @@ export const LOD_SPAN_THRESHOLDS = {
 	/** ≥ this many decades visible → Regions. */
 	regions: 12,
 	/** ≥ this many decades visible → ITU bands. */
-	itu: 3,
+	itu: 4,
 	/** ≥ this many decades visible → Allocations (below → Channels). */
-	allocations: 0.6
+	allocations: 1.2
 } as const;
 
 /** Derive the LOD tier from how many decades a domain spans. */

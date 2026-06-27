@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { visibleDomain, lod } from '$lib/state/view';
+	import { view, visibleDomain, lod, resetView } from '$lib/state/view';
 	import { selection, selectedAllocation } from '$lib/state/selection';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
 	import { axisOptions } from '$lib/state/axis';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
+	import { zoomable } from '$lib/actions/zoom';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
 	import Markers from '$lib/components/Markers.svelte';
@@ -18,6 +19,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let width = $state(0);
+	let zoomed = $derived($view.zoom > 1);
 </script>
 
 <svelte:head>
@@ -38,6 +40,9 @@
 			<div class="readout">
 				ν, hertz (log)<br />
 				Detail: {LOD_LABELS[$lod].toLowerCase()}
+				{#if zoomed}
+					· <button type="button" class="reset" onclick={resetView}>reset zoom</button>
+				{/if}
 			</div>
 		</header>
 
@@ -49,6 +54,8 @@
 					viewBox="0 0 {width} {PLOT.height}"
 					role="img"
 					aria-label="Electromagnetic spectrum on a logarithmic frequency axis, 1 Hz to 10^24 Hz"
+					class="zoomable"
+					use:zoomable={{ width: () => width, apply: (fn) => view.update(fn) }}
 				>
 					<SpectrumBand {width} domain={$visibleDomain} />
 					<Markers
@@ -68,6 +75,8 @@
 				</svg>
 			{/if}
 		</div>
+
+		<p class="hint" aria-hidden="true">Scroll to zoom · Shift-scroll to pan</p>
 	</section>
 </main>
 
@@ -89,6 +98,30 @@
 <ThemeToggle />
 
 <style>
+	.zoomable {
+		cursor: crosshair;
+		touch-action: none;
+	}
+	.reset {
+		font: inherit;
+		color: var(--ink);
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.hint {
+		margin: 9px 0 0;
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
 	main {
 		display: flex;
 		justify-content: center;

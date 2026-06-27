@@ -31,8 +31,10 @@ describe('allocationsAtLod', () => {
 		expect(allocationsAtLod(fixture, 3)).toHaveLength(4); // all
 	});
 
-	it('shows nothing on the real seed at the Regions tier', () => {
-		expect(allocationsAtLod(allocations, 0)).toHaveLength(0);
+	it('shows the six hero markers on the real seed at the Regions tier', () => {
+		const hero = allocationsAtLod(allocations, 0);
+		expect(hero).toHaveLength(6);
+		expect(hero.map((a) => a.id).sort()).toEqual(['am', 'fm', 'gps', 'vis', 'wifi', 'xray']);
 	});
 
 	it('shows the 8 allocation-tier entries at the Allocations LOD', () => {

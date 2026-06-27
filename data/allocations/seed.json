@@ -6,7 +6,7 @@
 		"band": [535000, 1605000],
 		"layer": "consumer",
 		"region": "radio",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "AM broadcast. Amplitude-modulated; long groundwave range at night.",
 		"source": "fcc-tofa"
 	},
@@ -51,7 +51,7 @@
 		"band": [88000000, 108000000],
 		"layer": "consumer",
 		"region": "radio",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "FM broadcast. Wideband stereo, line-of-sight propagation.",
 		"source": "fcc-tofa"
 	},
@@ -116,7 +116,7 @@
 		"hz": 1575420000,
 		"layer": "navigation",
 		"region": "microwave",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "GNSS positioning. Spread-spectrum, ~−130 dBm at the ground.",
 		"source": "fcc-tofa"
 	},
@@ -137,7 +137,7 @@
 		"band": [2400000000, 2483500000],
 		"layer": "consumer",
 		"region": "microwave",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "Shared ISM band: Wi-Fi ch 1/6/11, Bluetooth, Zigbee, microwave ovens.",
 		"source": "fcc-tofa"
 	},
@@ -190,7 +190,7 @@
 		"band": [428000000000000, 769000000000000],
 		"layer": "science",
 		"region": "visible",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "The single octave the eye detects (390–700 nm) — a sliver of the whole spectrum.",
 		"source": "nasa-ems"
 	},
@@ -210,7 +210,7 @@
 		"hz": 3000000000000000000,
 		"layer": "science",
 		"region": "xray",
-		"minLod": 2,
+		"minLod": 0,
 		"note": "Diagnostic radiography & CT (≈3 EHz). Ionising; tightly dose-controlled.",
 		"source": "nasa-ems"
 	}

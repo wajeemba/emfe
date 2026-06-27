@@ -17,13 +17,13 @@ describe('lodForSpan', () => {
 
 	it('reveals ITU bands as the span narrows', () => {
 		expect(lodForSpan(11.9)).toBe(LOD.ITU);
-		expect(lodForSpan(3)).toBe(LOD.ITU);
+		expect(lodForSpan(4)).toBe(LOD.ITU);
 	});
 
 	it('reveals allocations, then channels, on further descent', () => {
-		expect(lodForSpan(2.9)).toBe(LOD.ALLOCATIONS);
-		expect(lodForSpan(0.6)).toBe(LOD.ALLOCATIONS);
-		expect(lodForSpan(0.5)).toBe(LOD.CHANNELS);
+		expect(lodForSpan(3.9)).toBe(LOD.ALLOCATIONS);
+		expect(lodForSpan(1.2)).toBe(LOD.ALLOCATIONS);
+		expect(lodForSpan(1.1)).toBe(LOD.CHANNELS);
 		expect(lodForSpan(0.01)).toBe(LOD.CHANNELS);
 	});
 

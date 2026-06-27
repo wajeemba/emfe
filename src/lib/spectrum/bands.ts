@@ -74,28 +74,34 @@ export interface GradientStop {
 }
 
 /**
- * Build the continuous band's gradient stops for a visible domain. The band fades to
- * transparent at **both** ends (below ELF and above gamma) — asymptotically there is always
- * a lower and a higher frequency. The visible region renders as a true-color rainbow.
+ * Build the continuous band's gradient stops for a visible domain.
+ *
+ * Each region keeps a **solid colour core** but its boundaries **crossfade** into the
+ * neighbouring region rather than meeting at a hard edge — the spectrum is a continuum, not a
+ * set of quantised buckets, and the gradient should read that way. The band also fades to
+ * transparent at **both** ends (below ELF and above gamma), since asymptotically there is
+ * always a lower and a higher frequency. The visible region renders as a true-colour rainbow
+ * whose red/violet ends blend into infrared and ultraviolet.
  */
 export function bandGradientStops(domain: FreqDomain): GradientStop[] {
-	const FADE = 0.012;
+	/** Fraction of each region's width handed to the boundary crossfade on each side. */
+	const BLEND = 0.3;
 	const stops: GradientStop[] = [];
 	const push = (offset: number, color: string, opacity: number) =>
 		stops.push({ offset: clamp01(offset), color, opacity });
 
 	push(0, 'var(--region-radio)', 0); // transparent low-frequency end
-	REGIONS.forEach((r, idx) => {
+	REGIONS.forEach((r) => {
 		const lo = logPos(r.lo, domain);
 		const hi = logPos(r.hi, domain);
+		const w = hi - lo;
 		if (r.id === 'visible') {
-			SPECTRAL.forEach((c, i) => push(lo + ((hi - lo) * i) / (SPECTRAL.length - 1), c, 1));
+			SPECTRAL.forEach((c, i) => push(lo + (w * i) / (SPECTRAL.length - 1), c, 1));
 			return;
 		}
-		const startOff = idx === 0 ? FADE : lo;
-		const endOff = idx === REGIONS.length - 1 ? 1 - FADE : hi;
-		push(startOff, r.colorVar, 1);
-		push(endOff, r.colorVar, 1);
+		// Solid core; the gaps to the neighbours' cores are where the gradient blends.
+		push(lo + BLEND * w, r.colorVar, 1);
+		push(hi - BLEND * w, r.colorVar, 1);
 	});
 	push(1, 'var(--region-gamma)', 0); // transparent high-frequency end
 

@@ -18,7 +18,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 
 ## Phase 3 — Interaction & filters
 
-- [ ] **Task 7** — ⚠ Zoom + pan → semantic zoom (HIGH RISK) _(M, dep: 4)_ — _DEFERRED (per user, doing 8–11 first)_
+- [x] **Task 7** — ⚠ Zoom + pan → semantic zoom (HIGH RISK) _(M, dep: 4)_ ✅ _(scroll-zoom about cursor, shift-scroll pan; LOD emerges on descent)_
 - [x] **Task 8** — Content-layer toggles + counts _(S, dep: 5,6)_ ✅
 - [x] **Task 9** — License filter + amateur eligibility _(M, dep: 6)_ ✅
 - [x] **Task 10** — Axis toggles (sci-notation, λ) + theme _(S, dep: 4)_ ✅
