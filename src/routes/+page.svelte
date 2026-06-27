@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { visibleDomain, lod } from '$lib/state/view';
+	import { selection } from '$lib/state/selection';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
+	import Markers from '$lib/components/Markers.svelte';
 	import RegionLabels from '$lib/components/RegionLabels.svelte';
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
 
@@ -40,6 +42,7 @@
 					aria-label="Electromagnetic spectrum on a logarithmic frequency axis, 1 Hz to 10^24 Hz"
 				>
 					<SpectrumBand {width} domain={$visibleDomain} />
+					<Markers {width} domain={$visibleDomain} lod={$lod} selected={$selection} />
 					<RegionLabels {width} domain={$visibleDomain} />
 					<Axis {width} domain={$visibleDomain} />
 				</svg>

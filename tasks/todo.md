@@ -12,7 +12,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 ## Phase 2 — Static render
 
 - [x] **Task 4** — Axis + region band + ITU row (view + theme stores) _(M, dep: 2,3)_ ✅
-- [ ] **Task 5** — Allocation markers + LOD filtering (selection store) _(M, dep: 4)_
+- [x] **Task 5** — Allocation markers + LOD filtering (selection store) _(M, dep: 4)_ ✅
 - [ ] **Task 6** — Dock shell + Inspector (provenance) _(M, dep: 5)_
 - [ ] **Checkpoint: Static explorer** — matches prototype, click-to-inspect · human review
 
