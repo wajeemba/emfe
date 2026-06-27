@@ -32,7 +32,7 @@
 <style>
 	.eyebrow {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.14em;
 		color: var(--faint);
 		text-transform: uppercase;
@@ -54,7 +54,7 @@
 		cursor: pointer;
 		color: var(--sub);
 		font-family: var(--font-sans);
-		font-size: 11.5px;
+		font-size: 13.5px;
 		text-align: left;
 		transition: color 0.15s;
 	}
@@ -71,7 +71,7 @@
 		border: 1.5px solid var(--panelb);
 		background: transparent;
 		color: #fff;
-		font-size: 10px;
+		font-size: 12px;
 		line-height: 1;
 		flex-shrink: 0;
 		transition:

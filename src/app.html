@@ -5,6 +5,29 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<!--
+			Defense-in-depth theming, resolved before first paint (no white flash):
+			  1. <html data-theme="dark"> above is the static default — worst case, dark.
+			  2. This blocking script upgrades that to an explicit deep-link (?t=) choice, else
+			     the OS prefers-color-scheme, before the body renders.
+			  3. The theme store (state/theme.ts) then initializes from whatever is applied here.
+		-->
+		<script>
+			(function () {
+				try {
+					var t = new URLSearchParams(location.search).get('t');
+					var theme =
+						t === 'light' || t === 'dark'
+							? t
+							: window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+								? 'light'
+								: 'dark';
+					document.documentElement.dataset.theme = theme;
+				} catch (e) {
+					/* keep the static dark default */
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

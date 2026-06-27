@@ -125,13 +125,13 @@
 	}
 	.name {
 		font-family: var(--font-sans);
-		font-size: 11.5px;
+		font-size: 13.5px;
 		font-weight: 600;
 		fill: var(--ink);
 	}
 	.freq {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		fill: var(--sub);
 	}
 	.marker:focus-visible .name {

@@ -21,7 +21,7 @@ async function zoomIn(page: Page, steps = 8) {
 test('view state round-trips through the URL on reload', async ({ page }) => {
 	await page.goto('/');
 
-	await page.getByRole('button', { name: /Toggle light \/ dark/ }).click(); // → light
+	await page.getByRole('button', { name: /Switch to (light|dark) theme/ }).click(); // → light
 	await page.getByRole('switch', { name: /Gov \/ satellite/ }).click(); // gov layer off
 	await page.getByRole('radio', { name: /Amateur Extra/ }).click(); // license → extra
 	await zoomIn(page);

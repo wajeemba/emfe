@@ -54,14 +54,16 @@
 	// Restore from the URL once, in the browser, before we start mirroring back out.
 	$effect(() => {
 		if (!browser || restored) return;
-		const s = decodeState(new URLSearchParams(window.location.search), FULL_DOMAIN);
+		const params = new URLSearchParams(window.location.search);
+		const s = decodeState(params, FULL_DOMAIN);
 		view.set({ centerExp: s.centerExp, zoom: s.zoom });
 		layers.set(s.layers);
 		license.set(s.license);
-		theme.set(s.theme);
+		// Only the explicit deep-link theme overrides the OS preference already applied in <head>.
+		if (params.has('t')) theme.set(s.theme);
 		const sel = s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null;
 		selection.set(sel);
-		prev = { ...s, selected: sel };
+		prev = { ...s, selected: sel, theme: $theme };
 		restored = true;
 	});
 
@@ -103,6 +105,7 @@
 
 <main>
 	<section class="card">
+		<ThemeToggle />
 		<header>
 			<div>
 				<h1>The Electromagnetic Spectrum</h1>
@@ -174,7 +177,6 @@
 
 	{#snippet actions()}
 		<SourcesModal />
-		<ThemeToggle />
 	{/snippet}
 </Dock>
 
@@ -225,7 +227,7 @@
 		margin: 9px 0 0;
 		text-align: center;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--faint);
@@ -239,6 +241,7 @@
 	}
 
 	.card {
+		position: relative;
 		width: 100%;
 		max-width: 1280px;
 		background: var(--panel);
@@ -253,6 +256,8 @@
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: 16px;
+		/* clear the absolutely-positioned theme toggle in the top-right corner */
+		padding-right: 52px;
 		margin-bottom: 24px;
 	}
 
@@ -273,7 +278,7 @@
 	.readout {
 		flex-shrink: 0;
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: 13px;
 		color: var(--faint);
 		text-align: right;
 		line-height: 1.5;
@@ -316,25 +321,28 @@
 	}
 	@media (max-width: 720px) {
 		main {
-			/* Clear the fixed corner buttons up top; the dock collapses on mobile so the
-			   big bottom reserve is no longer needed. */
-			padding: 74px 12px 96px;
+			/* The theme toggle now sits on the card (not floating), so no big top reserve is
+			   needed; the dock collapses on mobile, so the bottom reserve stays modest. */
+			padding: 14px 10px 84px;
 		}
 		.card {
-			padding: 18px 16px 18px;
+			padding: 14px 14px 16px;
 			border-radius: 16px;
 		}
 		header {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 6px;
-			margin-bottom: 18px;
-		}
-		.readout {
-			text-align: left;
+			/* Compact header: title + readout on one tidy row, subtitle hidden to save height. */
+			gap: 10px;
+			margin-bottom: 14px;
+			padding-right: 44px;
 		}
 		h1 {
-			font-size: 22px;
+			font-size: 19px;
+		}
+		.sub {
+			display: none;
+		}
+		.readout {
+			font-size: 12px;
 		}
 		.panel {
 			border-right: none;

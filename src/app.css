@@ -77,6 +77,8 @@ body {
 	background: var(--bg);
 	color: var(--ink);
 	font-family: var(--font-sans);
+	/* Stop the browser pull-to-refresh; swiping down on the dock should not reload the page. */
+	overscroll-behavior-y: contain;
 }
 
 /* Visible focus for keyboard users (a11y — SPEC §Boundaries). */

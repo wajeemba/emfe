@@ -34,7 +34,7 @@
 <style>
 	.eyebrow {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.14em;
 		color: var(--faint);
 		text-transform: uppercase;
@@ -82,7 +82,7 @@
 	}
 	.count {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		color: var(--faint);
 	}
 	.switch {

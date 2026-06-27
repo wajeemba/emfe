@@ -36,7 +36,7 @@
 <style>
 	.eyebrow {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.14em;
 		color: var(--faint);
 		text-transform: uppercase;
@@ -94,7 +94,7 @@
 	.note {
 		display: block;
 		font-family: var(--font-mono);
-		font-size: 8.5px;
+		font-size: 10.5px;
 		color: var(--sub);
 		line-height: 1.3;
 	}

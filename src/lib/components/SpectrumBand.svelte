@@ -52,7 +52,7 @@
 	}
 	.itu-abbr {
 		font-family: var(--font-mono);
-		font-size: 8.5px;
+		font-size: 10.5px;
 		fill: var(--faint);
 		letter-spacing: 0.05em;
 	}

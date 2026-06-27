@@ -9,8 +9,9 @@ test('scientific-notation toggle adds 10ⁿ labels to the axis', async ({ page }
 
 	await page.getByRole('switch', { name: /Scientific notation/ }).click();
 
-	// Majors gain a sci-notation suffix; minors gain bare 10ⁿ labels.
-	await expect(page.locator('text.tick-label', { hasText: '1 MHz · 10⁶' })).toBeVisible();
+	// Majors gain a sci-notation suffix (exponent rendered as a raised <tspan>); minors appear.
+	await expect(page.locator('text.tick-label', { hasText: '1 MHz · 10' })).toBeVisible();
+	await expect(page.locator('text.tick-label tspan.exp')).not.toHaveCount(0);
 	await expect(page.locator('text.tick-label.minor')).not.toHaveCount(0);
 });
 
@@ -31,9 +32,9 @@ test('theme toggle flips the document data-theme attribute', async ({ page }) =>
 	const html = page.locator('html');
 	await expect(html).toHaveAttribute('data-theme', 'dark');
 
-	await page.getByRole('button', { name: /Toggle light \/ dark/ }).click();
+	await page.getByRole('button', { name: /Switch to (light|dark) theme/ }).click();
 	await expect(html).toHaveAttribute('data-theme', 'light');
 
-	await page.getByRole('button', { name: /Toggle light \/ dark/ }).click();
+	await page.getByRole('button', { name: /Switch to (light|dark) theme/ }).click();
 	await expect(html).toHaveAttribute('data-theme', 'dark');
 });

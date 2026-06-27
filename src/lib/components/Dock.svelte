@@ -7,10 +7,20 @@
 	// Collapsed by default on phones (the dock is fixed and would cover the plot); open on desktop.
 	let open = $state(browser ? !window.matchMedia('(max-width: 720px)').matches : true);
 	const toggle = () => (open = !open);
+
+	// Swipe the handle down to dismiss the dock (touch). A tap still toggles; only a real
+	// downward drag closes — and overscroll-behavior on <body> keeps it from reloading the page.
+	let touchStartY = 0;
+	function onTouchStart(event: TouchEvent) {
+		touchStartY = event.touches[0].clientY;
+	}
+	function onTouchMove(event: TouchEvent) {
+		if (open && event.touches[0].clientY - touchStartY > 36) open = false;
+	}
 </script>
 
 <section class="dock" class:open>
-	<div class="handle">
+	<div class="handle" ontouchstart={onTouchStart} ontouchmove={onTouchMove}>
 		<button
 			type="button"
 			class="bar"
@@ -90,7 +100,7 @@
 
 	.label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: 12px;
 		letter-spacing: 0.16em;
 		color: var(--sub);
 		text-transform: uppercase;
@@ -139,6 +149,7 @@
 			/* Never let the (fixed) dock cover the whole screen — scroll its contents instead. */
 			max-height: 68vh;
 			overflow-y: auto;
+			overscroll-behavior: contain;
 		}
 	}
 </style>

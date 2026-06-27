@@ -25,7 +25,7 @@
 	.region {
 		font-family: var(--font-sans);
 		font-weight: 600;
-		font-size: 10.5px;
+		font-size: 12.5px;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}

@@ -83,7 +83,7 @@
 <style>
 	.eyebrow {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.14em;
 		color: var(--faint);
 		text-transform: uppercase;
@@ -107,14 +107,14 @@
 	}
 	.meta {
 		font-family: var(--font-mono);
-		font-size: 10.5px;
+		font-size: 12.5px;
 		color: var(--sub);
 		margin: 3px 0 10px;
 	}
 	.pill {
 		display: inline-block;
 		font-family: var(--font-sans);
-		font-size: 11.5px;
+		font-size: 13.5px;
 		font-weight: 600;
 		padding: 4px 10px;
 		border-radius: 7px;
@@ -152,7 +152,7 @@
 		display: flex;
 		justify-content: space-between;
 		font-family: var(--font-mono);
-		font-size: 8.5px;
+		font-size: 10.5px;
 		color: var(--faint);
 		margin-bottom: 10px;
 	}
@@ -165,7 +165,7 @@
 	}
 	.source {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: 12px;
 		color: var(--faint);
 	}
 	.source a {

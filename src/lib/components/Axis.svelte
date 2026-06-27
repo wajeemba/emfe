@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import { logPos, type FreqDomain } from '$lib/spectrum/scale';
-	import { fmtExp, fmtWavelengthOf } from '$lib/spectrum/format';
+	import { fmtWavelengthOf } from '$lib/spectrum/format';
 	import { PLOT } from './plot-layout';
 
 	let {
@@ -25,22 +25,18 @@
 		24: '1 YHz'
 	};
 
-	/** Build the frequency label, optionally appending sci-notation (e.g. `1 MHz · 10⁶`). */
-	function freqLabel(exp: number, major: boolean): string {
-		const name = major ? (NAMES[exp] ?? '') : '';
-		if (!showExp) return name;
-		const sci = fmtExp(exp);
-		return name ? `${name} · ${sci}` : sci;
-	}
-
 	let ticks = $derived(
 		Array.from({ length: 25 }, (_, exp) => {
 			const major = exp % 3 === 0;
+			const name = major ? (NAMES[exp] ?? '') : '';
+			// The non-exponent part of the label; the exponent is drawn as a raised <tspan> so
+			// the sci-notation reads as proper superscript (not a tiny Unicode glyph).
+			const base = showExp ? (name ? `${name} · 10` : '10') : name;
 			return {
 				exp,
 				x: logPos(10 ** exp, domain) * width,
 				major,
-				label: freqLabel(exp, major),
+				base,
 				lambda: fmtWavelengthOf(10 ** exp)
 			};
 		}).filter((t) => t.x >= 0 && t.x <= width)
@@ -52,9 +48,9 @@
 
 {#each ticks as t (t.exp)}
 	<line x1={t.x} y1={PLOT.axisY} x2={t.x} y2={PLOT.axisY + (t.major ? 8 : 4)} class="tick" />
-	{#if t.label}
+	{#if t.base}
 		<text x={t.x} y={PLOT.axisY + 20} text-anchor="middle" class="tick-label" class:minor={!t.major}
-			>{t.label}</text
+			>{t.base}{#if showExp}<tspan class="exp" dy="-5">{t.exp}</tspan>{/if}</text
 		>
 	{/if}
 	{#if showLambda && t.major}
@@ -80,22 +76,26 @@
 	}
 	.tick-label {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		fill: var(--sub);
 	}
 	.tick-label.minor {
-		font-size: 8px;
+		font-size: 10px;
 		fill: var(--faint);
+	}
+	/* Raised exponent numerals — readable, unlike Unicode superscript glyphs. */
+	.exp {
+		font-size: 9px;
 	}
 	.lambda-label {
 		font-family: var(--font-mono);
-		font-size: 8px;
+		font-size: 10px;
 		fill: var(--layer-science);
 		opacity: 0.9;
 	}
 	.lambda-axis {
 		font-family: var(--font-mono);
-		font-size: 8.5px;
+		font-size: 10.5px;
 		fill: var(--faint);
 	}
 </style>

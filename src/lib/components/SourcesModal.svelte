@@ -3,6 +3,7 @@
 
 	const sources = referencedSources();
 	const version = __APP_VERSION__;
+	const year = new Date().getFullYear();
 	let dialog = $state<HTMLDialogElement>();
 
 	function open() {
@@ -51,13 +52,15 @@
 
 		<section>
 			<div class="eyebrow">Credits</div>
+			<p class="credit">© {year} Andrew Ahlfield</p>
 			<p class="credit">
-				An interactive, zoomable tour of the electromagnetic spectrum — from sub-ELF to gamma — on
-				one continuous log-frequency axis.
-			</p>
-			<p class="credit">
-				Design adapted from the Spectrum Atlas prototype. Built with SvelteKit. Amateur band plan
-				per the ARRL / FCC Part 97.
+				Developed using Claude Code (Opus 4.8) and the
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a
+					href="https://github.com/addyosmani/agent-skills"
+					target="_blank"
+					rel="noreferrer noopener">Addyosmani agent skills v0.6.2</a
+				>. Built with SvelteKit.
 			</p>
 		</section>
 
@@ -76,7 +79,7 @@
 		background: var(--chip);
 		color: var(--ink);
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: 12px;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		cursor: pointer;
@@ -138,7 +141,7 @@
 	}
 	.eyebrow {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 11px;
 		letter-spacing: 0.14em;
 		color: var(--faint);
 		text-transform: uppercase;
@@ -166,7 +169,7 @@
 	.meta {
 		margin-top: 2px;
 		font-family: var(--font-mono);
-		font-size: 9.5px;
+		font-size: 11.5px;
 		color: var(--faint);
 	}
 	.credit {
@@ -182,7 +185,7 @@
 		padding-top: 14px;
 		border-top: 1px solid var(--line);
 		font-family: var(--font-mono);
-		font-size: 9.5px;
+		font-size: 11.5px;
 		letter-spacing: 0.08em;
 		color: var(--faint);
 	}

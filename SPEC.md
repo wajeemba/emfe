@@ -25,17 +25,17 @@ zoom out to the seven great regions; zoom in to ITU bands, then to real allocati
 
 ## Tech Stack
 
-| Concern             | Choice                                                                                             |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
-| Framework           | **SvelteKit** + **Vite** + **TypeScript**                                                          |
-| Axis / zoom         | **D3** — `d3-scale` (log), `d3-zoom`, `d3-axis`                                                    |
-| Rendering           | **SVG** (markers are sparse; Canvas reserved only if a future dense layer needs it)                |
-| Styling             | Plain CSS + **CSS custom properties** (theming, per the prototype)                                 |
-| Data (full breadth) | Curated JSON in the repo — the source of truth, ELF→gamma                                          |
-| Data (live slice)   | SvelteKit server endpoint proxying + caching the **FCC Spectrum Dashboard API** (225 MHz–3700 MHz) |
-| Tests               | **Vitest** (unit) + **Playwright** (e2e)                                                           |
-| Host                | **Netlify** (`@sveltejs/adapter-netlify`)                                                          |
-| Package manager     | **npm**                                                                                            |
+| Concern             | Choice                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Framework           | **SvelteKit** + **Vite** + **TypeScript**                                                                                                                          |
+| Axis / zoom         | **D3** — `d3-scale` (log), `d3-zoom`, `d3-axis`                                                                                                                    |
+| Rendering           | **SVG** (markers are sparse; Canvas reserved only if a future dense layer needs it)                                                                                |
+| Styling             | Plain CSS + **CSS custom properties** (theming, per the prototype)                                                                                                 |
+| Data (full breadth) | Curated JSON in the repo — the source of truth, ELF→gamma                                                                                                          |
+| Data (live slice)   | ~~FCC Spectrum Dashboard API proxy~~ — **dropped**: that API is decommissioned (503; its data was frozen at 2014). Curated JSON is fresher and is the sole source. |
+| Tests               | **Vitest** (unit) + **Playwright** (e2e)                                                                                                                           |
+| Host                | **Netlify** (`@sveltejs/adapter-netlify`)                                                                                                                          |
+| Package manager     | **npm**                                                                                                                                                            |
 
 **Why these:** the heavy lifting (log axis, semantic zoom) is a custom visualization, so we
 use D3's low-level modules directly rather than a charting library. Because we work in
@@ -58,13 +58,15 @@ Chosen partly so the codebase stays legible without reading it line by line:
 
 ### Environment
 
-```
-FCC_API_KEY=    # free api.data.gov key; see .env.example
-```
+No runtime secrets required. (The `FCC_API_KEY` slot in `.env.example` is now vestigial — the
+FCC Spectrum Dashboard API it was for is decommissioned, see below — and can be ignored.)
 
-The FCC proxy (`src/routes/api/fcc/+server.ts`) sends the key only when present, and falls
-back to a committed snapshot if the upstream API is unavailable. `.env` is git-ignored;
-`.env.example` is committed as the template.
+> **FCC live data — retired.** The "live slice" was to proxy the FCC Spectrum Dashboard API
+> (`data.fcc.gov/api/spectrum-view/.../getSpectrumBands`). As of June 2026 that endpoint returns
+> a persistent `503`, the entire `data.fcc.gov` API host 301-redirects to a dead `www.fcc.gov`,
+> and even its last working (2022) responses were frozen at 2014 data. The curated JSON is
+> fresher and more accurate, so the proxy and the scheduled drift-check were dropped. If live
+> data is ever wanted, `opendata.fcc.gov` (Socrata ULS license records) is the live successor.
 
 ---
 
@@ -99,17 +101,15 @@ emfe/
 │   │   └── components/  → presentational .svelte (Axis, SpectrumBand, Dock, Inspector,
 │   │                       LayerToggles, LicenseFilter, SourcesModal, ThemeToggle)
 │   ├── routes/
-│   │   ├── +page.svelte         → the explorer
-│   │   └── api/fcc/+server.ts   → FCC Spectrum Dashboard proxy + cache
-│   └── app.css                  → CSS custom properties / theme (from the prototype)
+│   │   └── +page.svelte     → the explorer  (FCC proxy route dropped — API decommissioned)
+│   └── app.css              → CSS custom properties / theme (from the prototype)
 ├── data/
 │   ├── allocations/*.json   → curated source-of-truth data (committed, full breadth)
 │   └── schema/              → JSON schema
-├── scripts/sync/            → FCC drift-check (run by GitHub Actions)
 ├── tests/                   → Vitest unit tests
 ├── e2e/                     → Playwright tests
 ├── static/
-├── .github/workflows/       → CI + scheduled drift-check (opens a PR on upstream change)
+├── .github/workflows/       → CI (lint · check · test · build · e2e)
 ├── netlify.toml
 └── svelte.config.js
 ```
@@ -218,8 +218,8 @@ Solo developer, greenfield project — optimize for momentum, not ceremony.
 - **Light/dark theme**; scientific-notation (10ⁿ) and wavelength-λ toggles.
 - **Deep-linkable:** the URL query string serializes view state (center ν, zoom, active
   layers, license, theme) and round-trips exactly.
-- **Live data** for 225 MHz–3700 MHz via the cached FCC proxy, with a committed snapshot
-  fallback when the API is unavailable; curated JSON everywhere else.
+- ~~Live data for 225 MHz–3700 MHz via the cached FCC proxy~~ — dropped (the FCC Spectrum
+  Dashboard API is decommissioned). Curated JSON is the single source across the whole spectrum.
 - Deployed on **Netlify** with working per-PR deploy previews.
 - Keyboard-navigable; **WCAG AA** contrast.
 

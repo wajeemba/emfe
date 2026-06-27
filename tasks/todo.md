@@ -28,7 +28,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 ## Phase 4 — Deep-linking, live data, mobile
 
 - [x] **Task 12** — Deep-link URL round-trip _(M, dep: 7–10)_ ✅
-- [ ] **Task 13** — FCC proxy endpoint + cache + snapshot fallback _(M, dep: 3,5)_
+- [~] **Task 13** — ~~FCC proxy endpoint + cache + snapshot fallback~~ — **WON'T DO**: the FCC Spectrum Dashboard API is decommissioned (503; data frozen at 2014; `data.fcc.gov` API host redirects to a dead host). Curated JSON is fresher and is the sole source. See `fcc-api-dead` memory.
 - [x] **Task 14** — Mobile / touch / responsive _(M, dep: 7)_ ✅ _(pinch-zoom + one-finger pan; dock collapses, no overflow)_
 - [ ] **Checkpoint: Feature-complete** — deep-link + live FCC + mobile · human review
 
@@ -37,7 +37,7 @@ Concise checklist. Full detail (acceptance criteria, verification, files) in [pl
 - [~] **Task 15** — Full ELF→gamma curation + annotations _(L, dep: 3 + Open Q #1)_ — _IN PROGRESS: seed expanded 20→37 (added ELF/VLF/LF below 1 MHz, mmWave/WiGig, CMB, THz, fibre, UV-A, EUV, X-ray crystallography, and the gamma region: PET/Co-60/cosmic). Full curation + non-radio research still open._
 - [x] **Task 16** — Accessibility pass (WCAG AA) _(M, dep: 6–11)_ ✅ _(keyboard zoom/pan, aria-live, skip link, reduced-motion, AA-contrast faint colors)_
 - [ ] **Task 17** — e2e suite consolidation _(M, dep: 7–14)_
-- [~] **Task 18** — Netlify deploy + CI + scheduled drift-check _(M, dep: 1 + all)_ — _IN PROGRESS: Netlify CD live (push main:prod); GitHub Actions CI runs the full gate (lint/check/data:validate/test/build/e2e) on push + PR. Scheduled drift-check still pending Task 13 (FCC proxy)._
+- [~] **Task 18** — Netlify deploy + CI + scheduled drift-check _(M, dep: 1 + all)_ — _IN PROGRESS: Netlify CD live (push main:prod); GitHub Actions CI runs the full gate (lint/check/data:validate/test/build/e2e) on push + PR. Scheduled drift-check dropped — it depended on the FCC API, now won't-do (Task 13)._
 - [ ] **Checkpoint: Launch-ready** — all SPEC success criteria met · final go/no-go
 
 ## Resolved questions
