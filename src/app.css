@@ -45,10 +45,11 @@
 	--layer-gov: #ff9a3d;
 	--layer-science: #46d160;
 
-	/* Typography. */
-	--font-sans: 'Hanken Grotesk', system-ui, sans-serif;
-	--font-serif: 'Newsreader', Georgia, serif;
-	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+	/* Typography. Self-hosted via @fontsource-variable (see +layout.svelte).
+	   The "Variable" suffix is the family name the variable @font-face registers. */
+	--font-sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
+	--font-serif: 'Newsreader Variable', Georgia, serif;
+	--font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 }
 
 html[data-theme='light'] {

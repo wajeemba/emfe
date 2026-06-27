@@ -47,5 +47,10 @@
 		"vite-plugin-inspect": "^11.4.1",
 		"vitest": "^4.1.8",
 		"vitest-browser-svelte": "^2.1.1"
+	},
+	"dependencies": {
+		"@fontsource-variable/hanken-grotesk": "^5.2.8",
+		"@fontsource-variable/jetbrains-mono": "^5.2.8",
+		"@fontsource-variable/newsreader": "^5.2.10"
 	}
 }

@@ -230,7 +230,8 @@ Solo developer, greenfield project — optimize for momentum, not ceremony.
 - **Geographic scope:** **USA-scoped** for now — allocations follow US regulators (FCC Table
   of Frequency Allocations, FCC Part 97 / ARRL). Physics is universal; other ITU regions later.
 - **Brand / style:** headings **Newsreader** (serif); body & UI **Hanken Grotesk** (sans);
-  technical readouts **IBM Plex Mono**. Icon set: **Lucide** (`lucide-svelte`). Colors are
+  technical readouts **JetBrains Mono** (self-hosted; replaces IBM Plex Mono, which has no
+  variable build). Icon set: **Lucide** (`lucide-svelte`). Colors are
   CSS custom properties only (see `src/app.css`). See README §Brand & style guide.
 - **Spectrum band rendering:** the continuous gradient fades to transparent at **both** ends
   (below ELF and above gamma) — asymptotically there is always a lower / higher frequency.

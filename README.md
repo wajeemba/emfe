@@ -62,7 +62,11 @@ Visual identity carried over from the prototype (`moodboards/`):
 | ----------------------------------------------- | ------------------------------- |
 | Headings                                        | **Newsreader** (serif)          |
 | Body / UI                                       | **Hanken Grotesk** (sans-serif) |
-| Technical readouts (frequencies, ticks, labels) | **IBM Plex Mono**               |
+| Technical readouts (frequencies, ticks, labels) | **JetBrains Mono**              |
+
+Fonts are self-hosted via [`@fontsource-variable`](https://fontsource.org) (no
+external Google Fonts request), imported in [`src/routes/+layout.svelte`](src/routes/+layout.svelte).
+JetBrains Mono replaces IBM Plex Mono, which has no variable build.
 
 - **Icons** — [Lucide](https://lucide.dev) (`lucide-svelte`) is the project's
   icon set.
