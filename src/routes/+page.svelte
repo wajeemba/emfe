@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { view, visibleDomain, lod, resetView } from '$lib/state/view';
+	import { view, visibleDomain, resetView } from '$lib/state/view';
 	import { selection, selectedAllocation } from '$lib/state/selection';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
@@ -8,7 +8,6 @@
 	import { axisOptions } from '$lib/state/axis';
 	import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
 	import { allocations } from '$lib/data/loader';
-	import { LOD_LABELS } from '$lib/spectrum/lod';
 	import { FULL_DOMAIN } from '$lib/spectrum/scale';
 	import { fmtFreq } from '$lib/spectrum/format';
 	import { zoomable } from '$lib/actions/zoom';
@@ -28,11 +27,9 @@
 	let width = $state(0);
 	let zoomed = $derived($view.zoom > 1);
 
-	// Announce view changes to assistive tech (debounced via the polite live region).
+	// Announce the visible window to assistive tech (polite live region).
 	let announcement = $derived(
-		`${LOD_LABELS[$lod]} detail. Showing ${fmtFreq(10 ** $visibleDomain.minExp)} to ${fmtFreq(
-			10 ** $visibleDomain.maxExp
-		)}.`
+		`Showing ${fmtFreq(10 ** $visibleDomain.minExp)} to ${fmtFreq(10 ** $visibleDomain.maxExp)}.`
 	);
 
 	// ── Deep linking ────────────────────────────────────────────────────────────────────
@@ -112,10 +109,10 @@
 				<p class="sub">Everything we broadcast, navigate by, and see — on one continuous scale.</p>
 			</div>
 			<div class="readout">
-				ν, hertz (log)<br />
-				Detail: {LOD_LABELS[$lod].toLowerCase()}
+				ν, hertz (log)
 				{#if zoomed}
-					· <button type="button" class="reset" onclick={resetView}>reset zoom</button>
+					<br />
+					<button type="button" class="reset" onclick={resetView}>reset zoom</button>
 				{/if}
 			</div>
 		</header>
@@ -138,13 +135,7 @@
 					use:zoomable={{ width: () => width, apply: (fn) => view.update(fn) }}
 				>
 					<SpectrumBand {width} domain={$visibleDomain} />
-					<Markers
-						{width}
-						domain={$visibleDomain}
-						lod={$lod}
-						selected={$selection}
-						layers={$layers}
-					/>
+					<Markers {width} domain={$visibleDomain} selected={$selection} layers={$layers} />
 					<RegionLabels {width} domain={$visibleDomain} />
 					<Axis
 						{width}
@@ -163,7 +154,7 @@
 
 <Dock>
 	<div class="panel layers-col">
-		<LayerToggles lod={$lod} />
+		<LayerToggles />
 	</div>
 	<div class="panel license-col">
 		<LicenseFilter />

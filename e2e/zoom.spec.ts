@@ -29,26 +29,19 @@ async function wheelOnPlot(
 	);
 }
 
-test('scroll zooms in, raising the detail tier; reset returns to the full spectrum', async ({
-	page
-}) => {
+test('scroll zooms in; reset returns to the full spectrum', async ({ page }) => {
 	await page.goto('/');
-	const readout = page.locator('.readout');
-	await expect(readout).toContainText(/regions/i);
+	const reset = page.getByRole('button', { name: 'reset zoom' });
+	await expect(reset).toHaveCount(0); // full view: nothing to reset
 
 	// Zoom in over the microwave cluster.
 	await wheelOnPlot(page, { deltaY: -120, steps: 14, anchorFrac: 0.41 });
 
-	// Detail tier deepened past Regions and the reset affordance appeared.
-	await expect(readout).not.toContainText(/regions/i);
-	const reset = page.getByRole('button', { name: 'reset zoom' });
+	// The reset affordance appears and markers are rendered.
 	await expect(reset).toBeVisible();
-
-	// Channel-tier markers that are hidden at the full view become visible.
 	await expect(page.locator('svg g.marker')).not.toHaveCount(0);
 
 	await reset.click();
-	await expect(readout).toContainText(/regions/i);
 	await expect(reset).toHaveCount(0);
 });
 

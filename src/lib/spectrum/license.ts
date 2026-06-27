@@ -18,6 +18,17 @@ const RANK_LABELS: Record<LicenseRank, string> = {
 	extra: 'Extra'
 };
 
+/**
+ * A small glyph designating each operator-license class — shown in the licence filter and as
+ * a badge on amateur markers. Chosen as an escalating set of simple white-on-purple shapes.
+ */
+export const LICENSE_ICON: Record<LicenseRank, string> = {
+	unlicensed: '○',
+	technician: '▴',
+	general: '◆',
+	extra: '★'
+};
+
 export interface Eligibility {
 	/** True when the allocation carries an amateur license requirement at all. */
 	amateur: boolean;

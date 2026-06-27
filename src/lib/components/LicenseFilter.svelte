@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { LICENSE_RANKS, type LicenseRank } from '$lib/data/types';
+	import { LICENSE_ICON } from '$lib/spectrum/license';
 	import { license, setLicense } from '$lib/state/license';
 
 	/** Selector copy per class (label + the bands it opens), mirroring the prototype. */
@@ -24,7 +25,7 @@
 			aria-checked={on}
 			onclick={() => setLicense(rank)}
 		>
-			<span class="dot"></span>
+			<span class="dot" aria-hidden="true">{LICENSE_ICON[rank]}</span>
 			<span class="text">
 				<span class="label">{DEFS[rank].label}</span>
 				<span class="note">{DEFS[rank].note}</span>
@@ -68,17 +69,25 @@
 		border-color: color-mix(in srgb, var(--layer-amateur) 40%, transparent);
 	}
 	.dot {
-		width: 9px;
-		height: 9px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
 		flex-shrink: 0;
 		background: var(--panelb);
+		color: var(--sub);
+		font-size: 10px;
+		line-height: 1;
 		transition:
 			background 0.15s,
-			box-shadow 0.15s;
+			box-shadow 0.15s,
+			color 0.15s;
 	}
 	.row.on .dot {
 		background: var(--layer-amateur);
+		color: #fff;
 		box-shadow: 0 0 8px var(--layer-amateur);
 	}
 	.text {

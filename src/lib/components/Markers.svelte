@@ -4,7 +4,7 @@
 	import { logPos, type FreqDomain } from '$lib/spectrum/scale';
 	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { fmtFreq } from '$lib/spectrum/format';
-	import type { Lod } from '$lib/spectrum/lod';
+	import { LICENSE_ICON } from '$lib/spectrum/license';
 	import { allocations } from '$lib/data/loader';
 	import type { LayerId } from '$lib/data/types';
 	import { select } from '$lib/state/selection';
@@ -13,13 +13,11 @@
 	let {
 		width,
 		domain,
-		lod,
 		selected,
 		layers
 	}: {
 		width: number;
 		domain: FreqDomain;
-		lod: Lod;
 		selected: string | null;
 		layers: Record<LayerId, boolean>;
 	} = $props();
@@ -31,7 +29,10 @@
 	const bandMid = PLOT.bandY + PLOT.bandH / 2;
 
 	let markers = $derived(
-		visibleAllocations(allocations, lod, layers)
+		// LOD detail-tiers were confusing, so they're disabled for now: pass the maximum detail
+		// (3) so every allocation shows at any zoom. Restore semantic zoom by passing the live
+		// `lod` here (and re-adding the prop in this component + +page.svelte).
+		visibleAllocations(allocations, 3, layers)
 			.map((a) => ({ a, pos: logPos(a.hz, domain) }))
 			// cull markers outside the visible window (with a small margin for labels)
 			.filter(({ pos }) => pos >= -0.05 && pos <= 1.05)
@@ -41,6 +42,8 @@
 					a,
 					x: pos * width,
 					color: `var(--layer-${a.layer})`,
+					// Operator-license badge for amateur bands (overlaid on the purple dot).
+					licenseIcon: a.reqLicense ? LICENSE_ICON[a.reqLicense] : '',
 					nameY: labelY + 10,
 					freqY: labelY + 21,
 					lineTop: labelY + 28
@@ -88,19 +91,23 @@
 			style="stroke: {sel ? m.color : 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
 		/>
 
-		<!-- dot (or spectral swatch for visible light), centred on the band -->
+		<!-- dot (or transparent window for visible light), centred on the band -->
 		{#if m.a.region === 'visible'}
+			<!-- Transparent fill so the band's own rainbow shows through; just an outline. -->
 			<rect
 				x={m.x - 13}
 				y={bandMid - 4}
 				width="26"
 				height="8"
 				rx="2"
-				fill="url(#spectral-swatch)"
+				fill="transparent"
 				stroke="var(--panel)"
 			/>
 		{:else}
 			<circle cx={m.x} cy={bandMid} r={sel ? 7 : 5} style="fill: {m.color}" class="dot" class:sel />
+			{#if m.licenseIcon}
+				<text x={m.x} y={bandMid} class="license-icon" class:sel>{m.licenseIcon}</text>
+			{/if}
 		{/if}
 
 		<!-- label -->
@@ -122,6 +129,17 @@
 	}
 	.dot.sel {
 		filter: drop-shadow(0 0 6px currentColor);
+	}
+	/* Operator-license glyph, overlaid on the (purple) amateur dot. */
+	.license-icon {
+		font-size: 8px;
+		fill: #fff;
+		text-anchor: middle;
+		dominant-baseline: central;
+		pointer-events: none;
+	}
+	.license-icon.sel {
+		font-size: 10px;
 	}
 	.name {
 		font-family: var(--font-sans);

@@ -57,11 +57,11 @@ test('mobile layout reflows without horizontal overflow and collapses the dock',
 
 test('pinch zooms and one-finger drag pans on touch', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.locator('.readout')).toContainText(/regions/i);
+	const reset = page.getByRole('button', { name: 'reset zoom' });
+	await expect(reset).toHaveCount(0); // full view
 
 	await touch(page, { kind: 'pinch-out' });
-	await expect(page.getByRole('button', { name: 'reset zoom' })).toBeVisible();
-	await expect(page.locator('.readout')).not.toContainText(/regions/i);
+	await expect(reset).toBeVisible();
 
 	const ticksBefore = (await page.locator('svg text.tick-label').allTextContents()).join('|');
 	await touch(page, { kind: 'drag', from: 300, to: 80 });

@@ -49,7 +49,7 @@ test('view state round-trips through the URL on reload', async ({ page }) => {
 test('a malformed query degrades to the default view', async ({ page }) => {
 	await page.goto('/?z=abc&c=NaN&off=bogus&lic=admiral&t=neon');
 
-	await expect(page.locator('.readout')).toContainText(/regions/i);
+	await expect(page.getByRole('button', { name: 'reset zoom' })).toHaveCount(0); // full view
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	await expect(page.getByRole('radio', { name: /General/ })).toBeChecked();
 	await expect(page.getByRole('switch', { name: /Consumer/ })).toHaveAttribute(

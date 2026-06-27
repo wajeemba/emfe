@@ -20,6 +20,9 @@
 </script>
 
 <section class="dock" class:open>
+	<!-- Touch handlers are a swipe-to-dismiss enhancement; the toggle/chevron buttons inside
+	     are the accessible controls. -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="handle" ontouchstart={onTouchStart} ontouchmove={onTouchMove}>
 		<button
 			type="button"

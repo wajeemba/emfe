@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { LAYERS } from '$lib/data/types';
 	import { layerCounts } from '$lib/spectrum/filter';
-	import type { Lod } from '$lib/spectrum/lod';
 	import { allocations } from '$lib/data/loader';
 	import { LAYER_LABELS, layers, toggleLayer } from '$lib/state/layers';
 
-	let { lod }: { lod: Lod } = $props();
-
-	let counts = $derived(layerCounts(allocations, lod));
+	// LOD detail-tiers are disabled for now, so counts reflect every allocation in the layer
+	// (max detail = 3). Restore per-zoom counts by taking a `lod` prop and passing it here.
+	let counts = $derived(layerCounts(allocations, 3));
 </script>
 
 <div class="eyebrow">Content layers</div>
