@@ -2,10 +2,11 @@
 
 <script lang="ts">
 	import { logPos, type FreqDomain } from '$lib/spectrum/scale';
-	import { allocationsAtLod } from '$lib/spectrum/filter';
+	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { fmtFreq } from '$lib/spectrum/format';
 	import type { Lod } from '$lib/spectrum/lod';
 	import { allocations } from '$lib/data/loader';
+	import type { LayerId } from '$lib/data/types';
 	import { select } from '$lib/state/selection';
 	import { PLOT } from './plot-layout';
 
@@ -13,14 +14,21 @@
 		width,
 		domain,
 		lod,
-		selected
-	}: { width: number; domain: FreqDomain; lod: Lod; selected: string | null } = $props();
+		selected,
+		layers
+	}: {
+		width: number;
+		domain: FreqDomain;
+		lod: Lod;
+		selected: string | null;
+		layers: Record<LayerId, boolean>;
+	} = $props();
 
 	/** Three staggered label rows so neighbouring labels don't collide. */
 	const LEVELS = [4, 36, 68];
 
 	let markers = $derived(
-		allocationsAtLod(allocations, lod)
+		visibleAllocations(allocations, lod, layers)
 			.map((a) => ({ a, pos: logPos(a.hz, domain) }))
 			// cull markers outside the visible window (with a small margin for labels)
 			.filter(({ pos }) => pos >= -0.05 && pos <= 1.05)

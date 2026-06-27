@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { visibleDomain, lod } from '$lib/state/view';
 	import { selection, selectedAllocation } from '$lib/state/selection';
+	import { layers } from '$lib/state/layers';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
@@ -9,11 +10,12 @@
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
 	import Dock from '$lib/components/Dock.svelte';
 	import Inspector from '$lib/components/Inspector.svelte';
+	import LayerToggles from '$lib/components/LayerToggles.svelte';
 
 	let width = $state(0);
 
-	// Control panels filled in Phase 3 (Tasks 8–10).
-	const upcoming = ['Content layers', 'Operator licence', 'Detail & axis'];
+	// Control panels still to come in Phase 3 (Tasks 9–10).
+	const upcoming = ['Operator licence', 'Detail & axis'];
 </script>
 
 <svelte:head>
@@ -47,7 +49,13 @@
 					aria-label="Electromagnetic spectrum on a logarithmic frequency axis, 1 Hz to 10^24 Hz"
 				>
 					<SpectrumBand {width} domain={$visibleDomain} />
-					<Markers {width} domain={$visibleDomain} lod={$lod} selected={$selection} />
+					<Markers
+						{width}
+						domain={$visibleDomain}
+						lod={$lod}
+						selected={$selection}
+						layers={$layers}
+					/>
 					<RegionLabels {width} domain={$visibleDomain} />
 					<Axis {width} domain={$visibleDomain} />
 				</svg>
@@ -57,6 +65,9 @@
 </main>
 
 <Dock>
+	<div class="panel layers-col">
+		<LayerToggles lod={$lod} />
+	</div>
 	{#each upcoming as section (section)}
 		<div class="panel placeholder">
 			<div class="panel-eyebrow">{section}</div>
@@ -138,6 +149,10 @@
 		width: 200px;
 		flex-shrink: 0;
 	}
+	.layers-col {
+		width: 238px;
+		flex-shrink: 0;
+	}
 	.inspector-col {
 		flex: 1;
 		min-width: 0;
@@ -165,7 +180,8 @@
 			border-right: none;
 			padding: 0;
 		}
-		.placeholder {
+		.placeholder,
+		.layers-col {
 			width: 100%;
 		}
 	}

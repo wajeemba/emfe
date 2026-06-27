@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { allocationsAtLod } from '$lib/spectrum/filter';
+import { allocationsAtLod, layerCounts, visibleAllocations } from '$lib/spectrum/filter';
 import type { Lod } from '$lib/spectrum/lod';
-import type { Allocation } from '$lib/data/types';
+import { LAYERS, type Allocation, type LayerId } from '$lib/data/types';
 import { allocations } from '$lib/data/loader';
+
+const allLayersOn: Record<LayerId, boolean> = Object.fromEntries(
+	LAYERS.map((l) => [l, true])
+) as Record<LayerId, boolean>;
 
 function at(minLod: Lod): Allocation {
 	return {
@@ -34,5 +38,29 @@ describe('allocationsAtLod', () => {
 	it('shows the 8 allocation-tier entries at the Allocations LOD', () => {
 		expect(allocationsAtLod(allocations, 2)).toHaveLength(8);
 		expect(allocationsAtLod(allocations, 3)).toHaveLength(20);
+	});
+});
+
+describe('visibleAllocations', () => {
+	it('also filters by enabled content layers', () => {
+		expect(visibleAllocations(allocations, 2, allLayersOn)).toHaveLength(8);
+		const noScience = { ...allLayersOn, science: false };
+		// drops the two science entries at LOD 2 (Visible, Medical X-ray)
+		expect(visibleAllocations(allocations, 2, noScience)).toHaveLength(6);
+		expect(visibleAllocations(allocations, 2, noScience).every((a) => a.layer !== 'science')).toBe(
+			true
+		);
+	});
+});
+
+describe('layerCounts', () => {
+	it('counts allocations per layer at a LOD, ignoring toggles', () => {
+		expect(layerCounts(allocations, 2)).toEqual({
+			consumer: 3,
+			amateur: 2,
+			navigation: 1,
+			gov: 0,
+			science: 2
+		});
 	});
 });
