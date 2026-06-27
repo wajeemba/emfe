@@ -1,10 +1,15 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { view, visibleDomain, lod, resetView } from '$lib/state/view';
 	import { selection, selectedAllocation } from '$lib/state/selection';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
+	import { theme } from '$lib/state/theme';
 	import { axisOptions } from '$lib/state/axis';
+	import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
+	import { allocations } from '$lib/data/loader';
 	import { LOD_LABELS } from '$lib/spectrum/lod';
+	import { FULL_DOMAIN } from '$lib/spectrum/scale';
 	import { zoomable } from '$lib/actions/zoom';
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
@@ -21,7 +26,62 @@
 
 	let width = $state(0);
 	let zoomed = $derived($view.zoom > 1);
+
+	// ── Deep linking ────────────────────────────────────────────────────────────────────
+	// The URL query string is a lossless mirror of the view state (see state/url.ts).
+	function snapshot(): DeepLinkSnapshot {
+		return {
+			centerExp: $view.centerExp,
+			zoom: $view.zoom,
+			layers: $layers,
+			license: $license,
+			theme: $theme,
+			selected: $selection
+		};
+	}
+
+	let restored = $state(false);
+	let prev: DeepLinkSnapshot | null = null;
+
+	// Restore from the URL once, in the browser, before we start mirroring back out.
+	$effect(() => {
+		if (!browser || restored) return;
+		const s = decodeState(new URLSearchParams(window.location.search), FULL_DOMAIN);
+		view.set({ centerExp: s.centerExp, zoom: s.zoom });
+		layers.set(s.layers);
+		license.set(s.license);
+		theme.set(s.theme);
+		const sel = s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null;
+		selection.set(sel);
+		prev = { ...s, selected: sel };
+		restored = true;
+	});
+
+	// Mirror state → URL. Discrete changes (filters/theme/selection) push a history entry;
+	// continuous zoom/pan replaces the current one so the back button isn't spammed.
+	$effect(() => {
+		const snap = snapshot(); // read deps eagerly so this re-runs on any change
+		if (!browser || !restored) return;
+		const qs = encodeState(snap);
+		const url = qs ? `?${qs}` : window.location.pathname;
+		const method = prev && discreteChanged(prev, snap) ? 'pushState' : 'replaceState';
+		history[method](history.state, '', url);
+		prev = snap;
+	});
+
+	// Back/forward: re-apply the view encoded in the URL the browser navigated to.
+	function onPopState() {
+		const s = decodeState(new URLSearchParams(window.location.search), FULL_DOMAIN);
+		view.set({ centerExp: s.centerExp, zoom: s.zoom });
+		layers.set(s.layers);
+		license.set(s.license);
+		theme.set(s.theme);
+		selection.set(s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null);
+		prev = snapshot();
+	}
 </script>
+
+<svelte:window onpopstate={onPopState} />
 
 <svelte:head>
 	<title>EM Frequency Explorer</title>

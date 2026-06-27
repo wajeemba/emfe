@@ -1,0 +1,63 @@
+import { test, expect, type Page } from '@playwright/test';
+
+async function zoomIn(page: Page, steps = 8) {
+	await page.evaluate((steps) => {
+		const svg = document.querySelector('svg.zoomable')!;
+		const r = svg.getBoundingClientRect();
+		for (let i = 0; i < steps; i++) {
+			svg.dispatchEvent(
+				new WheelEvent('wheel', {
+					deltaY: -120,
+					clientX: r.left + r.width * 0.41,
+					clientY: r.top + r.height / 2,
+					bubbles: true,
+					cancelable: true
+				})
+			);
+		}
+	}, steps);
+}
+
+test('view state round-trips through the URL on reload', async ({ page }) => {
+	await page.goto('/');
+
+	await page.getByRole('button', { name: /Toggle light \/ dark/ }).click(); // → light
+	await page.getByRole('switch', { name: /Gov \/ satellite/ }).click(); // gov layer off
+	await page.getByRole('radio', { name: /Amateur Extra/ }).click(); // license → extra
+	await zoomIn(page);
+
+	// The URL now encodes every changed dimension.
+	await expect.poll(() => new URL(page.url()).searchParams.get('z')).not.toBeNull();
+	const url = page.url();
+	const params = new URL(url).searchParams;
+	expect(params.get('t')).toBe('light');
+	expect(params.get('off')).toContain('gov');
+	expect(params.get('lic')).toBe('extra');
+
+	// Reload restores the identical view.
+	await page.reload();
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+	await expect(page.getByRole('switch', { name: /Gov \/ satellite/ })).toHaveAttribute(
+		'aria-checked',
+		'false'
+	);
+	await expect(page.getByRole('radio', { name: /Amateur Extra/ })).toBeChecked();
+	await expect(page.getByRole('button', { name: 'reset zoom' })).toBeVisible();
+	expect(page.url()).toBe(url);
+});
+
+test('a malformed query degrades to the default view', async ({ page }) => {
+	await page.goto('/?z=abc&c=NaN&off=bogus&lic=admiral&t=neon');
+
+	await expect(page.locator('.readout')).toContainText(/regions/i);
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+	await expect(page.getByRole('radio', { name: /General/ })).toBeChecked();
+	await expect(page.getByRole('switch', { name: /Consumer/ })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
+	await expect(page.getByRole('switch', { name: /Gov \/ satellite/ })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
+});
