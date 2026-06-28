@@ -239,6 +239,9 @@
 		justify-content: center;
 		/* leave room for the fixed dock (its open body overlays; reserve for the open height) */
 		padding: 16px 28px 220px;
+		/* Pinch / drag anywhere over the explorer area drives the view (the dock + drawer opt out
+		   via their own handlers), so suppress the browser's own touch pan/zoom here. */
+		touch-action: none;
 	}
 
 	.card {
