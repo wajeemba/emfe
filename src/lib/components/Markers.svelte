@@ -1,9 +1,10 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
+	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
 	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
+	import type { Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
 	import { LICENSE_ICON } from '$lib/spectrum/license';
 	import { clampCenter, clampZoom } from '$lib/spectrum/zoom';
@@ -31,6 +32,21 @@
 	const LANE_Y = [6, 33, 60];
 	/** Callout dots sit on the vertical centre line of the coloured band. */
 	const bandMid = PLOT.bandY + PLOT.bandH / 2;
+	/** A real-bandwidth bar replaces the dot once the allocation's band is at least this wide. */
+	const MIN_BAR_PX = 7;
+
+	/**
+	 * The on-screen pixel extent of an allocation's real band — or `null` when it has no band
+	 * or is still too narrow to render as anything but a point. Once wide enough we draw the
+	 * allocation at its true width on the axis (the "render data in real bandwidth" goal).
+	 */
+	function barOf(a: Allocation | null): { x0: number; x1: number; w: number } | null {
+		if (!a?.band) return null;
+		const x0 = logPos(a.band[0], domain) * width;
+		const x1 = logPos(a.band[1], domain) * width;
+		const w = x1 - x0;
+		return w >= MIN_BAR_PX ? { x0, x1, w } : null;
+	}
 
 	let visible = $derived(visibleAllocations(allocations, 3, layers, license));
 
@@ -105,6 +121,7 @@
      (so addresses inside a collapsed neighbourhood, or whose label didn't fit, stay reachable). -->
 {#each plainDots as d (d.id)}
 	{@const sel = selected === d.id}
+	{@const bar = barOf(d.alloc)}
 	<g
 		class="band-marker"
 		role="button"
@@ -113,7 +130,21 @@
 		onclick={() => select(d.id)}
 		onkeydown={(e) => onKey2(e, d.id)}
 	>
-		{#if d.region === 'visible'}
+		{#if bar}
+			<!-- real bandwidth: a bar of the allocation's true width -->
+			<rect
+				x={bar.x0}
+				y={bandMid - 5}
+				width={bar.w}
+				height="10"
+				rx="2.5"
+				style={d.region === 'visible' ? '' : `fill: var(--layer-${d.layer})`}
+				fill={d.region === 'visible' ? 'transparent' : undefined}
+				class="band-bar"
+				class:vis={d.region === 'visible'}
+				class:sel
+			/>
+		{:else if d.region === 'visible'}
 			<rect
 				x={d.x - 9}
 				y={bandMid - 3.5}
@@ -172,6 +203,7 @@
 				>{item.sublabel}</text
 			>
 		{:else}
+			{@const bar = barOf(item.alloc)}
 			<line
 				x1={item.x}
 				y1={p.lineTop}
@@ -180,8 +212,22 @@
 				class="line"
 				style="stroke: {sel ? p.color : 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
 			/>
-			<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
-			{#if item.alloc?.region !== 'visible'}
+			{#if bar}
+				<!-- real-bandwidth bar for the labelled leaf -->
+				<rect
+					x={bar.x0}
+					y={bandMid - 6}
+					width={bar.w}
+					height="12"
+					rx="3"
+					style={item.alloc?.region === 'visible' ? '' : `fill: ${p.color}`}
+					fill={item.alloc?.region === 'visible' ? 'transparent' : undefined}
+					class="leaf-bar"
+					class:vis={item.alloc?.region === 'visible'}
+					class:sel
+				/>
+			{:else if item.alloc?.region !== 'visible'}
+				<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
 				<circle
 					cx={item.x}
 					cy={bandMid}
@@ -193,6 +239,18 @@
 				{#if p.licenseIcon}
 					<text x={item.x} y={bandMid} class="license-icon" class:sel>{p.licenseIcon}</text>
 				{/if}
+			{:else}
+				<rect
+					x={item.x - 9}
+					y={bandMid - 4}
+					width="18"
+					height="8"
+					rx="2"
+					fill="transparent"
+					stroke="var(--panel)"
+					class="vis-dot"
+					class:sel
+				/>
 			{/if}
 			<text x={item.x} y={p.nameY} text-anchor="middle" class="name" data-mk={item.id}
 				>{item.label}</text
@@ -232,6 +290,35 @@
 	}
 	.band-dot.sel {
 		opacity: 1;
+	}
+	.band-bar {
+		stroke: var(--panel);
+		stroke-width: 1;
+		opacity: 0.92;
+	}
+	.band-bar.vis {
+		stroke: var(--panel);
+		stroke-width: 1.5;
+	}
+	.band-marker:hover .band-bar,
+	.band-marker:focus-visible .band-bar {
+		opacity: 1;
+		stroke: var(--ink);
+	}
+	.band-bar.sel {
+		opacity: 1;
+		stroke: var(--ink);
+	}
+	.leaf-bar {
+		stroke: var(--panel);
+		stroke-width: 1.5;
+	}
+	.leaf-bar.vis {
+		stroke: var(--ink);
+	}
+	.leaf-bar.sel {
+		stroke: var(--ink);
+		filter: drop-shadow(0 0 6px currentColor);
 	}
 	.band-marker:focus-visible .vis-dot,
 	.band-marker:focus-visible .band-dot {
