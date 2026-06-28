@@ -52,7 +52,15 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 		current.apply((v) => zoomAbout(v, FULL_DOMAIN, anchor, factor));
 	}
 
-	// ── Touch / pen: one-finger pan, two-finger pinch ──────────────────────────────────
+	// ── Touch / pen: one-finger pan, two-finger pinch — anywhere on screen ────────────────
+	// Listening on `window` (not just the plot) means pinch/pan work wherever the user touches:
+	// there's usually only one thing to zoom. Touches that start on the controls dock or the
+	// inspector drawer are left alone, so those panels handle their own gestures and a
+	// two-finger gesture split across a panel and the band resolves each side independently.
+	const IGNORE_SELECTOR = '.dock, .drawer, .backdrop';
+	const startedInPanel = (target: EventTarget | null) =>
+		target instanceof Element && target.closest(IGNORE_SELECTOR) !== null;
+
 	// Track active non-mouse pointers by their x position; mouse stays on the wheel path.
 	const pointers = new Map<number, number>();
 	let lastPanX = 0;
@@ -60,12 +68,8 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 
 	function onPointerDown(event: PointerEvent) {
 		if (event.pointerType === 'mouse') return;
+		if (startedInPanel(event.target)) return; // a panel owns this gesture
 		pointers.set(event.pointerId, event.clientX);
-		try {
-			node.setPointerCapture(event.pointerId);
-		} catch {
-			// Capture can fail for a not-yet-active pointer (e.g. synthetic events in tests).
-		}
 		if (pointers.size === 1) {
 			lastPanX = event.clientX;
 		} else if (pointers.size === 2) {
@@ -101,11 +105,14 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 	}
 
 	function onPointerUp(event: PointerEvent) {
-		if (event.pointerType === 'mouse') return;
+		if (event.pointerType === 'mouse' || !pointers.has(event.pointerId)) return;
 		pointers.delete(event.pointerId);
-		if (node.hasPointerCapture?.(event.pointerId)) node.releasePointerCapture(event.pointerId);
 		// Re-seed pan anchor from a remaining finger so lifting one of two doesn't jump.
 		if (pointers.size === 1) lastPanX = [...pointers.values()][0];
+		if (pointers.size >= 2) {
+			const [a, b] = [...pointers.values()];
+			pinchDist = Math.abs(a - b);
+		}
 	}
 
 	// ── Keyboard: arrows pan, +/- zoom about center, 0 resets ──────────────────────────
@@ -139,12 +146,14 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 	}
 
 	// Non-passive so we can preventDefault the page scroll/gesture while interacting.
+	// Wheel + keyboard stay on the plot (so the page still scrolls elsewhere, and the SVG is the
+	// focusable widget); touch gestures listen on the window so pinch/pan work anywhere.
 	node.addEventListener('wheel', onWheel, { passive: false });
-	node.addEventListener('pointerdown', onPointerDown);
-	node.addEventListener('pointermove', onPointerMove, { passive: false });
-	node.addEventListener('pointerup', onPointerUp);
-	node.addEventListener('pointercancel', onPointerUp);
 	node.addEventListener('keydown', onKeyDown);
+	window.addEventListener('pointerdown', onPointerDown);
+	window.addEventListener('pointermove', onPointerMove, { passive: false });
+	window.addEventListener('pointerup', onPointerUp);
+	window.addEventListener('pointercancel', onPointerUp);
 
 	return {
 		update(next: ZoomableParams) {
@@ -152,11 +161,11 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 		},
 		destroy() {
 			node.removeEventListener('wheel', onWheel);
-			node.removeEventListener('pointerdown', onPointerDown);
-			node.removeEventListener('pointermove', onPointerMove);
-			node.removeEventListener('pointerup', onPointerUp);
-			node.removeEventListener('pointercancel', onPointerUp);
 			node.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('pointerdown', onPointerDown);
+			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerup', onPointerUp);
+			window.removeEventListener('pointercancel', onPointerUp);
 		}
 	};
 }

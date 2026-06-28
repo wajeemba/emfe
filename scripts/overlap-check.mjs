@@ -46,7 +46,14 @@ const VIEWS = [
 	{ name: 'sweep-64', z: 64, c: 9.1 },
 	// uhf cluster (15 members) + edges
 	{ name: 'uhf-mid', z: 18, c: 8.75 },
-	{ name: 'uhf-edge', z: 9, c: 8.9 }
+	{ name: 'uhf-edge', z: 9, c: 8.9 },
+	// layer-toggle combinations — grouping must stay overlap-free for any subset of layers
+	{ name: 'only-consumer', z: 1, c: 12, off: 'amateur,navigation,gov,science' },
+	{ name: 'only-amateur', z: 6, c: 7.3, off: 'consumer,navigation,gov,science' },
+	{ name: 'no-science', z: 4, c: 9, off: 'science' },
+	{ name: 'only-gov-nav', z: 5, c: 9.3, off: 'consumer,amateur,science' },
+	{ name: 'only-science', z: 2, c: 14, off: 'consumer,amateur,navigation,gov' },
+	{ name: 'consumer-amateur', z: 8, c: 7.5, off: 'navigation,gov,science' }
 ];
 
 const VIEWPORTS = [
@@ -77,7 +84,9 @@ for (const theme of themes) {
 
 		for (const v of VIEWS) {
 			const t = theme === 'light' ? '&t=light' : '';
-			const url = v.z === 1 ? `${BASE}/?${t.slice(1)}` : `${BASE}/?z=${v.z}&c=${v.c}${t}`;
+			const off = v.off ? `&off=${v.off}` : '';
+			const params = (v.z === 1 ? '' : `z=${v.z}&c=${v.c}`) + t + off;
+			const url = params ? `${BASE}/?${params.replace(/^&/, '')}` : `${BASE}/`;
 			await page.goto(url, { waitUntil: 'networkidle' });
 			await page.waitForSelector('#explorer', { timeout: 10000 });
 			await page.waitForTimeout(250); // settle fonts/transitions

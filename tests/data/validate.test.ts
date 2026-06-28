@@ -49,14 +49,6 @@ describe('validateAllocations — invariant violations', () => {
 			'non-monotonic (equal hz)',
 			[alloc({ id: 'a', hz: 1e6 }), alloc({ id: 'b', hz: 1e6 })],
 			/not strictly increasing/
-		],
-		[
-			'overlapping bands in a layer',
-			[
-				alloc({ id: 'a', hz: 1.5e6, band: [1e6, 2e6] }),
-				alloc({ id: 'b', hz: 1.8e6, band: [1.5e6, 3e6] })
-			],
-			/overlaps/
 		]
 	];
 
@@ -68,12 +60,11 @@ describe('validateAllocations — invariant violations', () => {
 		});
 	}
 
-	it('allows non-overlapping bands across different layers', () => {
+	it('allows overlapping bands (real spectrum shares ranges, e.g. 2.4 GHz ISM)', () => {
 		const data = [
 			alloc({ id: 'a', hz: 1.5e6, layer: 'consumer', band: [1e6, 2e6] }),
-			alloc({ id: 'b', hz: 1.8e6, layer: 'amateur', band: [1.5e6, 3e6] })
+			alloc({ id: 'b', hz: 1.8e6, layer: 'consumer', band: [1.5e6, 3e6] })
 		];
-		// Cross-layer overlap is fine; only the equal-hz monotonic rule could fire — it won't here.
 		expect(validateAllocations(data, SOURCES)).toEqual([]);
 	});
 });

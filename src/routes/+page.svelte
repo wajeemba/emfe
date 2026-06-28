@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { view, visibleDomain, resetView } from '$lib/state/view';
-	import { selection, selectedAllocation } from '$lib/state/selection';
+	import { selection, selectedAllocation, clearSelection } from '$lib/state/selection';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
 	import { theme } from '$lib/state/theme';
@@ -17,7 +17,7 @@
 	import RegionLabels from '$lib/components/RegionLabels.svelte';
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
 	import Dock from '$lib/components/Dock.svelte';
-	import Inspector from '$lib/components/Inspector.svelte';
+	import InspectorDrawer from '$lib/components/InspectorDrawer.svelte';
 	import LayerToggles from '$lib/components/LayerToggles.svelte';
 	import LicenseFilter from '$lib/components/LicenseFilter.svelte';
 	import AxisOptions from '$lib/components/AxisOptions.svelte';
@@ -168,14 +168,18 @@
 	<div class="panel axis-col">
 		<AxisOptions />
 	</div>
-	<div class="panel inspector-col">
-		<Inspector allocation={$selectedAllocation} license={$license} />
-	</div>
 
 	{#snippet actions()}
 		<SourcesModal />
 	{/snippet}
 </Dock>
+
+<InspectorDrawer
+	allocation={$selectedAllocation}
+	license={$license}
+	open={$selection !== null}
+	onclose={clearSelection}
+/>
 
 <style>
 	.skip-link {
@@ -233,8 +237,11 @@
 	main {
 		display: flex;
 		justify-content: center;
-		/* leave room for the fixed dock */
-		padding: 16px 28px 260px;
+		/* leave room for the fixed dock (its open body overlays; reserve for the open height) */
+		padding: 16px 28px 220px;
+		/* Pinch / drag anywhere over the explorer area drives the view (the dock + drawer opt out
+		   via their own handlers), so suppress the browser's own touch pan/zoom here. */
+		touch-action: none;
 	}
 
 	.card {
@@ -310,17 +317,15 @@
 		width: 236px;
 		flex-shrink: 0;
 	}
-	.inspector-col {
-		flex: 1;
-		min-width: 0;
+	.panel:last-child {
 		border-right: none;
-		padding-right: 0;
 	}
-	@media (max-width: 720px) {
+
+	/* Compact (phone portrait or landscape): the dock collapses to a handle, so reserve only a
+	   little; controls scroll horizontally as fixed-width cards. */
+	@media (max-width: 720px), (max-height: 600px) {
 		main {
-			/* The theme toggle now sits on the card (not floating), so no big top reserve is
-			   needed; the dock collapses on mobile, so the bottom reserve stays modest. */
-			padding: 14px 10px 84px;
+			padding: 14px 10px 70px;
 		}
 		.card {
 			padding: 14px 14px 16px;
@@ -341,14 +346,37 @@
 		.readout {
 			font-size: 12px;
 		}
+		/* Keep panels as fixed-width cards that scroll horizontally (don't stretch full width). */
 		.panel {
+			flex: 0 0 auto;
+			scroll-snap-align: start;
 			border-right: none;
 			padding: 0;
 		}
-		.axis-col,
-		.layers-col,
+		.axis-col {
+			width: 196px;
+		}
+		.layers-col {
+			width: 230px;
+		}
 		.license-col {
-			width: 100%;
+			width: 226px;
+		}
+	}
+
+	/* Landscape phones: shrink the card chrome so the spectrum gets the height. */
+	@media (max-height: 600px) and (min-width: 721px) {
+		main {
+			padding: 8px 16px 64px;
+		}
+		.card {
+			padding: 12px 20px 12px;
+		}
+		header {
+			margin-bottom: 8px;
+		}
+		.sub {
+			display: none;
 		}
 	}
 </style>
