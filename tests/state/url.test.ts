@@ -74,7 +74,7 @@ describe('decodeState — malformed input degrades safely', () => {
 
 	it('clamps an out-of-range zoom and center', () => {
 		const back = decodeState(new URLSearchParams('z=99999&c=-50'), FULL_DOMAIN);
-		expect(back.zoom).toBeLessThanOrEqual(64);
+		expect(back.zoom).toBeLessThanOrEqual(4096);
 		expect(back.centerExp).toBeGreaterThanOrEqual(FULL_DOMAIN.minExp);
 		expect(back.centerExp).toBeLessThanOrEqual(FULL_DOMAIN.maxExp);
 	});

@@ -4,26 +4,61 @@
 
 	let { children, actions }: { children: Snippet; actions?: Snippet } = $props();
 
-	// Collapsed by default on phones (the dock is fixed and would cover the plot); open on desktop.
-	let open = $state(browser ? !window.matchMedia('(max-width: 720px)').matches : true);
-	const toggle = () => (open = !open);
+	/** "Compact" = a phone in portrait (narrow) OR landscape (short): the dock must not eat the
+	 *  screen, so it starts collapsed there and opens on demand. Desktop starts open. */
+	const COMPACT = '(max-width: 720px), (max-height: 600px)';
+	let open = $state(browser ? !window.matchMedia(COMPACT).matches : true);
+	let dragY = $state(0);
+	let dragging = $state(false);
 
-	// Swipe the handle down to dismiss the dock (touch). A tap still toggles; only a real
-	// downward drag closes — and overscroll-behavior on <body> keeps it from reloading the page.
-	let touchStartY = 0;
-	function onTouchStart(event: TouchEvent) {
-		touchStartY = event.touches[0].clientY;
+	let pointerId: number | null = null;
+	let startY = 0;
+	let moved = 0;
+
+	function onPointerDown(e: PointerEvent) {
+		if (e.pointerType === 'mouse') return; // mouse uses the buttons; drag is a touch affordance
+		pointerId = e.pointerId;
+		startY = e.clientY;
+		moved = 0;
+		dragging = true;
 	}
-	function onTouchMove(event: TouchEvent) {
-		if (open && event.touches[0].clientY - touchStartY > 36) open = false;
+	function onPointerMove(e: PointerEvent) {
+		if (pointerId !== e.pointerId) return;
+		const dy = e.clientY - startY;
+		moved = Math.max(moved, Math.abs(dy));
+		// Only the open dock drags down to dismiss; a closed dock doesn't drag up (use the button).
+		dragY = open ? Math.max(0, dy) : 0;
+	}
+	function onPointerUp(e: PointerEvent) {
+		if (pointerId !== e.pointerId) return;
+		pointerId = null;
+		dragging = false;
+		if (open && dragY > 56) open = false; // dragged past the close threshold
+		dragY = 0;
+	}
+
+	function toggle() {
+		if (moved > 6) return; // that was a drag, not a tap
+		open = !open;
 	}
 </script>
 
-<section class="dock" class:open>
-	<!-- Touch handlers are a swipe-to-dismiss enhancement; the toggle/chevron buttons inside
-	     are the accessible controls. -->
+<section
+	class="dock"
+	class:open
+	class:dragging
+	style="--dragY: {dragY}px"
+	aria-label="Explorer controls"
+>
+	<!-- The grip is a drag-to-dismiss affordance; the buttons are the accessible controls. -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="handle" ontouchstart={onTouchStart} ontouchmove={onTouchMove}>
+	<div
+		class="handle"
+		onpointerdown={onPointerDown}
+		onpointermove={onPointerMove}
+		onpointerup={onPointerUp}
+		onpointercancel={onPointerUp}
+	>
 		<button
 			type="button"
 			class="bar"
@@ -51,11 +86,11 @@
 		</button>
 	</div>
 
-	{#if open}
-		<div id="dock-body" class="body">
+	<div class="sheet">
+		<div id="dock-body" class="body" inert={!open}>
 			{@render children()}
 		</div>
-	{/if}
+	</div>
 </section>
 
 <style>
@@ -70,6 +105,11 @@
 		border-bottom: none;
 		border-radius: 16px 16px 0 0;
 		box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.3);
+		transform: translateY(var(--dragY));
+		transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.dock.dragging {
+		transition: none; /* follow the finger 1:1 while dragging */
 	}
 
 	.handle {
@@ -78,6 +118,7 @@
 		gap: 14px;
 		width: 100%;
 		padding: 8px 16px 8px 22px;
+		touch-action: none; /* let us own the vertical drag gesture */
 	}
 
 	.bar {
@@ -99,6 +140,10 @@
 		border-radius: 2px;
 		background: var(--panelb);
 		flex-shrink: 0;
+		transition: background 0.15s;
+	}
+	.dock.dragging .grip {
+		background: var(--sub);
 	}
 
 	.label {
@@ -133,26 +178,52 @@
 		background: var(--chip);
 	}
 
+	/* Animated open/close: collapse the sheet's row track from 0fr → 1fr. */
+	.sheet {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.dock.open .sheet {
+		grid-template-rows: 1fr;
+	}
+	.dock.dragging .sheet {
+		transition: none;
+	}
+
 	.body {
 		display: flex;
 		gap: 0;
+		min-height: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+		padding: 0 22px;
+		border-top: 1px solid transparent;
+	}
+	.dock.open .body {
 		padding: 16px 22px 22px;
-		border-top: 1px solid var(--line);
+		border-top-color: var(--line);
 	}
 
-	@media (max-width: 720px) {
+	@media (prefers-reduced-motion: reduce) {
+		.dock,
+		.sheet {
+			transition: none;
+		}
+	}
+
+	/* Compact (phone portrait or landscape): full-bleed, controls scroll horizontally so the
+	   sheet stays short and never buries the explorer. */
+	@media (max-width: 720px), (max-height: 600px) {
 		.dock {
 			left: 0;
 			right: 0;
 			border-radius: 0;
 		}
 		.body {
-			flex-direction: column;
-			gap: 16px;
-			/* Never let the (fixed) dock cover the whole screen — scroll its contents instead. */
-			max-height: 68vh;
-			overflow-y: auto;
-			overscroll-behavior: contain;
+			gap: 14px;
+			scroll-snap-type: x proximity;
+			-webkit-overflow-scrolling: touch;
 		}
 	}
 </style>

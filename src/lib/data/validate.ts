@@ -3,8 +3,11 @@
  *   - valid layer / region / license / minLod enums
  *   - well-formed bands (low < high) containing the representative frequency
  *   - monotonic, positive representative frequencies
- *   - no overlapping bands within a single layer
  *   - every `source` resolves to a known SourceRef
+ *
+ * Note: bands are *allowed* to overlap (even within a layer). Real spectrum genuinely shares
+ * ranges — Wi-Fi, Bluetooth, Zigbee and microwave ovens all live in the 2.4 GHz ISM band —
+ * so the earlier "no overlap within a layer" rule was counterfactual and has been dropped.
  *
  * No fs, no schema engine — those live in scripts/data-validate.ts. This module is the
  * testable core, exercised with both valid and deliberately-broken fixtures.
@@ -57,19 +60,6 @@ export function validateAllocations(
 	for (let i = 1; i < byHz.length; i++) {
 		if (byHz[i].hz <= byHz[i - 1].hz) {
 			add(byHz[i].id, `frequency not strictly increasing at ${byHz[i].hz} Hz`);
-		}
-	}
-
-	// No overlapping bands within a layer.
-	for (const layer of LAYERS) {
-		const banded = allocs
-			.filter((a) => a.layer === layer && a.band)
-			.map((a) => ({ id: a.id, lo: a.band![0], hi: a.band![1] }))
-			.sort((x, y) => x.lo - y.lo);
-		for (let i = 1; i < banded.length; i++) {
-			if (banded[i].lo < banded[i - 1].hi) {
-				add(banded[i].id, `band overlaps "${banded[i - 1].id}" within layer "${layer}"`);
-			}
 		}
 	}
 

@@ -9,7 +9,7 @@ const fullView = { centerExp: center, zoom: 1 };
 describe('clampZoom', () => {
 	it('keeps magnification within range', () => {
 		expect(clampZoom(0.1)).toBe(ZOOM_RANGE.min);
-		expect(clampZoom(1000)).toBe(ZOOM_RANGE.max);
+		expect(clampZoom(1e9)).toBe(ZOOM_RANGE.max);
 		expect(clampZoom(4)).toBe(4);
 	});
 });
