@@ -363,6 +363,7 @@
 	sel: boolean
 )}
 	{@const col = fillOf(alloc, spectralColor(alloc.hz))}
+	{@const solid = alloc.optical === 'led' && alloc.emission !== 'white'}
 	{#if alloc.lines && alloc.lines.length > 0}
 		<!-- A discrete-line emitter (gas discharge / flame): one spectral tick per emission line. -->
 		{#each alloc.lines as ln, i (i)}
@@ -387,9 +388,18 @@
 			style="fill: {col}"
 			class="optical-bar"
 			class:sel
+			class:solid
 		/>
 	{:else}
-		<circle cx={x} cy={bandMid} r={sel ? 6 : 4} style="fill: {col}" class="optical-dot" class:sel />
+		<circle
+			cx={x}
+			cy={bandMid}
+			r={sel ? 6 : 4}
+			style="fill: {col}"
+			class="optical-dot"
+			class:sel
+			class:solid
+		/>
 	{/if}
 {/snippet}
 
@@ -585,6 +595,11 @@
 		stroke: var(--ink);
 		stroke-width: 1;
 	}
+	/* Coloured LEDs read as solid blocks of their colour (not translucent brackets). */
+	.optical-bar.solid,
+	.optical-dot.solid {
+		opacity: 1;
+	}
 	.optical-bar.sel {
 		opacity: 0.85;
 		stroke-width: 1.5;
@@ -597,6 +612,11 @@
 	.optical-dot.sel {
 		stroke-width: 1.8;
 		filter: drop-shadow(0 0 5px currentColor);
+	}
+	/* Keep solid LEDs fully opaque even when selected (higher specificity than the .sel rules). */
+	.optical-bar.solid.sel,
+	.optical-dot.solid.sel {
+		opacity: 1;
 	}
 	/* A single emission line — a thin spectral spike, one per line of a discharge/flame spectrum. */
 	.emission-line {
