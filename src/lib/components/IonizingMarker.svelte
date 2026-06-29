@@ -27,17 +27,17 @@
 
 <style>
 	.ion-line {
-		stroke: var(--region-uv);
-		stroke-width: 1.25;
-		stroke-dasharray: 3 3;
-		opacity: 0.8;
+		stroke: var(--ionizing);
+		stroke-width: 1.5;
+		stroke-dasharray: 4 3;
+		opacity: 0.95;
 	}
 	.ion-label {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		fill: var(--region-uv);
+		fill: var(--ionizing);
 		font-weight: 600;
 	}
 	.ion-sub {

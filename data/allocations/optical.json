@@ -174,7 +174,7 @@
 		"altLayer": "consumer",
 		"region": "visible",
 		"minLod": 3,
-		"note": "A real neon sign is just neon gas, whose many emission lines cluster in the orange-red — one unmistakable warm hue. Every other 'neon' colour is a fib: argon, mercury and phosphor coatings doing the work, not neon.",
+		"note": "A real neon sign is just neon gas, whose many emission lines cluster in the orange-red — one unmistakable warm hue (also the glow inside a nixie tube, the retro display whose stacked wire numerals light up neon-orange). Every other \"neon\" colour is a fib: argon, mercury and phosphor coatings doing the work, not neon.",
 		"source": "nist-asd",
 		"optical": "gas"
 	},
@@ -271,20 +271,6 @@
 		"optical": "gas",
 		"minLod": 3,
 		"note": "Xenon discharge — a crisp blue-white. A xenon flashtube is the daylight-balanced pop of a camera flash and old cinema lamps; arc versions light car HID headlights and IMAX projectors.",
-		"source": "nist-asd"
-	},
-	{
-		"id": "nixie",
-		"name": "Nixie tube",
-		"hz": 468279378319275,
-		"band": [432663382883533, 512290598086124],
-		"lines": [432663382883533, 460723002919932, 468279378319275, 488022884584080, 512290598086124],
-		"layer": "science",
-		"altLayer": "consumer",
-		"region": "visible",
-		"optical": "gas",
-		"minLod": 3,
-		"note": "Nixie tube — a 1950s–70s cold-cathode display with ten stacked wire numerals in neon gas. Light a digit and it glows the warm orange of neon's emission lines: the same spectrum as a neon sign, shaped like a number.",
 		"source": "nist-asd"
 	},
 	{

@@ -1331,7 +1331,8 @@
 		"note": "Near-infrared (940 nm) — the invisible light a TV remote blinks. Also IR illuminators on security cameras, face-unlock dot projectors, and proximity sensors. The LED emission is genuinely broad (≈915–965 nm).",
 		"source": "rp-photonics",
 		"emission": "spectral",
-		"optical": "led"
+		"optical": "led",
+		"altLayer": "science"
 	},
 	{
 		"id": "lidar",

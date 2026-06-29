@@ -76,6 +76,8 @@
 
 	/* White-light emitter (white LED) — a true white bar rather than a single-wavelength tint. */
 	--emit-white: #f4f4f5;
+	/* Ionizing-threshold annotation — amber so it reads against the violet UV gradient it sits on. */
+	--ionizing: #ffce4a;
 
 	/* Typography. Self-hosted via @fontsource-variable (see +layout.svelte).
 	   The "Variable" suffix is the family name the variable @font-face registers. */
@@ -144,6 +146,7 @@ html[data-theme='light'] {
 	--op-starlink: #2b8fe0;
 
 	--emit-white: #fcfcfc;
+	--ionizing: #c98a16;
 }
 
 * {
