@@ -29,6 +29,11 @@
 					},
 					"minItems": 1
 				},
+				"lines": {
+					"type": "array",
+					"items": { "type": "number", "exclusiveMinimum": 0 },
+					"minItems": 1
+				},
 				"layer": {
 					"enum": ["consumer", "amateur", "navigation", "gov", "science"]
 				},

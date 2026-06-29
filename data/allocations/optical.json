@@ -117,5 +117,69 @@
 		"minLod": 3,
 		"note": "White LED — not a colour at all but a broadband mix: a blue InGaN die (~450 nm) pumping a yellow Ce:YAG phosphor, whose two humps the eye blends into white. That's why it spans most of the visible band rather than sitting at one wavelength, and why cheap ones look harshly blue.",
 		"source": "nasa-ems"
+	},
+
+	{
+		"id": "sodium-emission",
+		"name": "Sodium glow",
+		"hz": 5.0898e14,
+		"band": [5.07e14, 5.1e14],
+		"lines": [5.0898e14],
+		"layer": "science",
+		"altLayer": "consumer",
+		"region": "visible",
+		"minLod": 3,
+		"note": "Sodium emission (589 nm) — the orange-yellow you get dropping table salt into a flame, and the near-monochromatic glow of low-pressure sodium street lamps. Almost all the light is the single 589 nm 'D-line' doublet, so every colour washes out to grey-brown under it.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "hydrogen-balmer",
+		"name": "Hydrogen (Balmer)",
+		"hz": 4.568e14,
+		"band": [4.568e14, 7.3085e14],
+		"lines": [4.568e14, 6.1672e14, 6.9077e14, 7.3085e14],
+		"layer": "science",
+		"region": "visible",
+		"minLod": 3,
+		"note": "The Balmer series of atomic hydrogen — Hα (656 nm, red), Hβ (486 nm, cyan), Hγ (434 nm) and Hδ (410 nm, violet). Mixed, they give a hydrogen discharge tube its pink glow; Hα alone is the deep red of the Sun's chromosphere and of glowing nebulae.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "neon-sign",
+		"name": "Neon sign",
+		"hz": 4.6828e14,
+		"band": [4.3266e14, 5.1227e14],
+		"lines": [5.1227e14, 4.8826e14, 4.6828e14, 4.6072e14, 4.3266e14],
+		"layer": "science",
+		"altLayer": "consumer",
+		"region": "visible",
+		"minLod": 3,
+		"note": "A real neon sign is just neon gas, whose many emission lines cluster in the orange-red — one unmistakable warm hue. Every other 'neon' colour is a fib: argon, mercury and phosphor coatings doing the work, not neon.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "mercury-vapor",
+		"name": "Mercury lines",
+		"hz": 5.4897e14,
+		"band": [5.1867e14, 6.8791e14],
+		"lines": [6.8791e14, 5.4897e14, 5.1867e14],
+		"layer": "science",
+		"altLayer": "consumer",
+		"region": "visible",
+		"minLod": 3,
+		"note": "The mercury-vapour lines inside fluorescent tubes and old high-bay lamps — blue (436 nm), green (546 nm) and yellow (578 nm). A strong invisible 254 nm UV line does the real work, exciting the tube's white phosphor; the spiky visible lines are why fluorescent light mangles photo colour.",
+		"source": "nasa-ems"
+	},
+	{
+		"id": "blue-flame",
+		"name": "Blue flame",
+		"hz": 5.8043e14,
+		"band": [5.8043e14, 6.9492e14],
+		"lines": [6.9492e14, 6.3286e14, 5.8043e14],
+		"layer": "science",
+		"region": "visible",
+		"minLod": 3,
+		"note": "A clean gas flame glows blue-green not from heat but from excited molecular fragments — CH radicals near 431 nm and the C₂ 'Swan bands' (~474 & 516 nm). A sooty candle is the opposite: orange incandescent carbon, a smooth blackbody with no sharp lines.",
+		"source": "nasa-ems"
 	}
 ]

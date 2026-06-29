@@ -68,6 +68,13 @@ export interface RawAllocation {
 	 * these pieces instead of one solid span — so the empty gap between them isn't drawn as used.
 	 */
 	segments?: [number, number][];
+	/**
+	 * Discrete spectral emission lines (Hz) — for a gas/discharge whose light is a set of sharp
+	 * lines rather than a continuous band (sodium 589 nm, the hydrogen Balmer series, a neon sign).
+	 * Rendered as one spectrally-coloured tick per line; `band` should span their extent and `hz`
+	 * sits on the dominant line.
+	 */
+	lines?: number[];
 	layer: LayerId;
 	/**
 	 * Optional second content layer this allocation also belongs to. It shows when *either* layer

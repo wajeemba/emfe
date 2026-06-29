@@ -348,7 +348,21 @@
 	sel: boolean
 )}
 	{@const col = spectralColor(alloc.hz)}
-	{#if bar}
+	{#if alloc.lines && alloc.lines.length > 0}
+		<!-- A discrete-line emitter (gas discharge / flame): one spectral tick per emission line. -->
+		{#each alloc.lines as ln, i (i)}
+			{@const lx = logPos(ln, domain) * width}
+			<rect
+				x={lx - (sel ? 1.25 : 1)}
+				y={bandMid - (sel ? 10 : 8)}
+				width={sel ? 2.5 : 2}
+				height={sel ? 20 : 16}
+				style="fill: {spectralColor(ln)}"
+				class="emission-line"
+				class:sel
+			/>
+		{/each}
+	{:else if bar}
 		<rect
 			x={bar.x0}
 			y={bandMid - (sel ? 8 : 6)}
@@ -568,6 +582,14 @@
 	.optical-dot.sel {
 		stroke-width: 1.8;
 		filter: drop-shadow(0 0 5px currentColor);
+	}
+	/* A single emission line — a thin spectral spike, one per line of a discharge/flame spectrum. */
+	.emission-line {
+		stroke: var(--marker-stroke);
+		stroke-width: 0.5;
+	}
+	.emission-line.sel {
+		filter: drop-shadow(0 0 4px currentColor);
 	}
 	.band-marker:focus-visible .band-dot {
 		stroke: var(--ink);
