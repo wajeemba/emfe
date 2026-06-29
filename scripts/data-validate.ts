@@ -27,6 +27,7 @@ addFormats(ajv);
 // many allocation files against the one allocations schema.
 const allocationsValidator = ajv.compile(readJson('data/schema/allocations.schema.json'));
 const sourcesValidator = ajv.compile(readJson('data/schema/sources.schema.json'));
+const substrateValidator = ajv.compile(readJson('data/schema/substrate.schema.json'));
 
 const errors: string[] = [];
 
@@ -63,10 +64,40 @@ for (const issue of validateAllocations(allAllocs, sourceIds)) {
 	errors.push(`invariant [${issue.id}] ${issue.message}`);
 }
 
+// 4. Allocation substrate (the bottom tier). Schema, then gap-free contiguity within each
+//    administration stream (federal / non-federal): bands sorted by `lo` must abut exactly —
+//    the whole point is that there is no "empty" spectrum.
+const substrate = readJson('data/allocation-table/us-table.json') as {
+	source: string;
+	bands: { lo: number; hi: number; federal: boolean }[];
+};
+if (checkSchema(substrateValidator, substrate, 'us-table.json')) {
+	if (!sourceIds.has(substrate.source)) {
+		errors.push(`invariant [substrate] unknown source "${substrate.source}"`);
+	}
+	for (const b of substrate.bands) {
+		if (!(b.lo < b.hi)) errors.push(`invariant [substrate] band lo ${b.lo} not below hi ${b.hi}`);
+	}
+	// One gap-free union stream (each band tagged by its primary administration): sorted by `lo`,
+	// every band must abut the previous one's `hi` — no gaps (the whole point) and no overlaps.
+	const sorted = [...substrate.bands].sort((a, b) => a.lo - b.lo);
+	for (let i = 1; i < sorted.length; i++) {
+		if (sorted[i].lo > sorted[i - 1].hi) {
+			errors.push(`invariant [substrate] gap between ${sorted[i - 1].hi} and ${sorted[i].lo} Hz`);
+		} else if (sorted[i].lo < sorted[i - 1].hi) {
+			errors.push(
+				`invariant [substrate] overlap between ${sorted[i - 1].hi} and ${sorted[i].lo} Hz`
+			);
+		}
+	}
+}
+
 if (errors.length > 0) {
 	console.error(`data:validate — ${errors.length} problem(s):`);
 	for (const e of errors) console.error(`  ✗ ${e}`);
 	process.exit(1);
 }
 
-console.log(`data:validate — OK (${allAllocs.length} allocations, ${sources.length} sources).`);
+console.log(
+	`data:validate — OK (${allAllocs.length} allocations, ${substrate.bands.length} substrate bands, ${sources.length} sources).`
+);

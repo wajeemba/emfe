@@ -1,0 +1,41 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://emfe/schema/substrate.json",
+	"title": "Allocation substrate (US Table of Frequency Allocations §2.106)",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["source", "revision", "bands"],
+	"properties": {
+		"source": { "type": "string", "minLength": 1 },
+		"revision": { "type": "string", "format": "date" },
+		"bands": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/band" }
+		}
+	},
+	"$defs": {
+		"band": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["lo", "hi", "federal", "primary"],
+			"properties": {
+				"lo": { "type": "number", "exclusiveMinimum": 0 },
+				"hi": { "type": "number", "exclusiveMinimum": 0 },
+				"federal": { "type": "boolean" },
+				"primary": {
+					"type": "array",
+					"items": { "type": "string", "minLength": 1 }
+				},
+				"secondary": {
+					"type": "array",
+					"items": { "type": "string", "minLength": 1 }
+				},
+				"footnotes": {
+					"type": "array",
+					"items": { "type": "string", "minLength": 1 }
+				},
+				"note": { "type": "string", "minLength": 1 }
+			}
+		}
+	}
+}

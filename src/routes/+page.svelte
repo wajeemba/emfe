@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { view, visibleDomain, resetView, undoView } from '$lib/state/view';
-	import { selection, selectedAllocation, clearSelection } from '$lib/state/selection';
+	import { selection, selectedAllocation, clearSelection, gasIsolated } from '$lib/state/selection';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
 	import { theme } from '$lib/state/theme';
 	import { axisOptions } from '$lib/state/axis';
+	import { substrateView, substrateSelection, selectBand, clearBand } from '$lib/state/substrate';
 	import { inspectorPinned } from '$lib/state/inspector';
 	import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
 	import { allocations } from '$lib/data/loader';
@@ -16,12 +17,18 @@
 	import Axis from '$lib/components/Axis.svelte';
 	import Markers from '$lib/components/Markers.svelte';
 	import Channels from '$lib/components/Channels.svelte';
+	import Substrate from '$lib/components/Substrate.svelte';
+	import AssignmentLane from '$lib/components/AssignmentLane.svelte';
 	import RegionLabels from '$lib/components/RegionLabels.svelte';
+	import IonizingMarker from '$lib/components/IonizingMarker.svelte';
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
 	import Dock from '$lib/components/Dock.svelte';
 	import InspectorDrawer from '$lib/components/InspectorDrawer.svelte';
+	import SubstrateInfo from '$lib/components/SubstrateInfo.svelte';
 	import LayerToggles from '$lib/components/LayerToggles.svelte';
 	import LicenseFilter from '$lib/components/LicenseFilter.svelte';
+	import VisibleFilter from '$lib/components/VisibleFilter.svelte';
+	import AllocationFilter from '$lib/components/AllocationFilter.svelte';
 	import AxisOptions from '$lib/components/AxisOptions.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import SourcesModal from '$lib/components/SourcesModal.svelte';
@@ -78,6 +85,28 @@
 		prev = snap;
 	});
 
+	// The marker inspector and the substrate info card are both right-hand sheets — only one shows
+	// at a time. Selecting a marker closes the band card; picking a band (below) closes the marker.
+	$effect(() => {
+		if ($selection) clearBand();
+	});
+
+	// Selecting a gas/discharge re-isolates its spectrum (dims the others).
+	$effect(() => {
+		const a = $selection && allocations.find((x) => x.id === $selection);
+		if (a && a.lines && a.lines.length > 0) gasIsolated.set(true);
+	});
+
+	// A click on empty space — not the info card, the controls dock, or an entry/button — brings
+	// every spectrum back (un-isolate) while leaving the selected gas's card open.
+	function onBackgroundClick(e: MouseEvent) {
+		const t = e.target;
+		if (t instanceof Element && t.closest('.drawer, .dock, .modal, [role="button"], button, a')) {
+			return;
+		}
+		gasIsolated.set(false);
+	}
+
 	// Ctrl/Cmd+Z reverses the last view jump (clicking a neighbourhood to frame it, or a reset).
 	function onKeydown(e: KeyboardEvent) {
 		if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
@@ -97,7 +126,7 @@
 	}
 </script>
 
-<svelte:window onpopstate={onPopState} onkeydown={onKeydown} />
+<svelte:window onpopstate={onPopState} onkeydown={onKeydown} onclick={onBackgroundClick} />
 
 <svelte:head>
 	<title>EM Frequency Explorer</title>
@@ -159,7 +188,26 @@
 							license={$license}
 						/>
 						<RegionLabels {width} domain={$visibleDomain} />
+						<IonizingMarker {width} domain={$visibleDomain} />
 						<Channels {width} domain={$visibleDomain} layers={$layers} />
+						<!-- Carrier holdings + designated frequencies ride the band; their visibility is
+						     driven by the content-layer toggles (no separate assignment switch). -->
+						<AssignmentLane
+							{width}
+							domain={$visibleDomain}
+							layers={$layers}
+							selected={$selection}
+						/>
+						<Substrate
+							{width}
+							domain={$visibleDomain}
+							off={$substrateView.off}
+							admin={$substrateView.admin}
+							onpick={(b) => {
+								clearSelection();
+								selectBand(b);
+							}}
+						/>
 						<Axis
 							{width}
 							domain={$visibleDomain}
@@ -186,6 +234,12 @@
 		<div class="panel license-col">
 			<LicenseFilter />
 		</div>
+		<div class="panel visible-col">
+			<VisibleFilter />
+		</div>
+		<div class="panel allocation-col">
+			<AllocationFilter />
+		</div>
 		<div class="panel axis-col">
 			<AxisOptions />
 		</div>
@@ -204,6 +258,8 @@
 			inspectorPinned.set(false);
 		}}
 	/>
+
+	<SubstrateInfo band={$substrateSelection} onclose={clearBand} />
 </div>
 
 <style>
@@ -374,6 +430,14 @@
 		width: 236px;
 		flex-shrink: 0;
 	}
+	.visible-col {
+		width: 214px;
+		flex-shrink: 0;
+	}
+	.allocation-col {
+		width: 248px;
+		flex-shrink: 0;
+	}
 	.panel:last-child {
 		border-right: none;
 	}
@@ -418,6 +482,12 @@
 		}
 		.license-col {
 			width: 226px;
+		}
+		.visible-col {
+			width: 208px;
+		}
+		.allocation-col {
+			width: 244px;
 		}
 	}
 

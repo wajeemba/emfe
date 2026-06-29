@@ -2,16 +2,18 @@
 
 <script lang="ts">
 	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
-	import { visibleAllocations, effectiveLayer } from '$lib/spectrum/filter';
+	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
 	import { licenseRank, type Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
+	import { spectralColor } from '$lib/spectrum/color';
 	import { LICENSE_ICON, privilegeBands, hasPrivilegePlan } from '$lib/spectrum/license';
 	import { clampCenter, clampZoom } from '$lib/spectrum/zoom';
 	import { allocations } from '$lib/data/loader';
 	import type { LayerId, LicenseRank } from '$lib/data/types';
-	import { select } from '$lib/state/selection';
+	import { select, gasIsolated } from '$lib/state/selection';
 	import { jumpTo } from '$lib/state/view';
+	import { visibleGroups } from '$lib/state/visible';
 	import { PLOT } from './plot-layout';
 
 	let {
@@ -40,6 +42,35 @@
 	/** An opaque sub-band section at least this wide can seat its own class glyph, centred. */
 	const SECTION_GLYPH_PX = 13;
 
+	/**
+	 * An "emitter" colours itself by the physical colour of its light: a laser/LED (`emission`) or a
+	 * gas/discharge (`lines`). Everything else — including non-laser physical-science phenomena like
+	 * IR heat, UV bands and gamma sources — keeps its content-layer colour (science = green).
+	 */
+	const emits = (a: Allocation | null): boolean =>
+		!!a && (a.emission != null || (a.lines?.length ?? 0) > 0);
+	/** Marker fill for an emitter: white for a broadband white LED, else the sampled spectral colour. */
+	const fillOf = (a: Allocation | null, fallback: string): string =>
+		a?.emission === 'white'
+			? 'var(--emit-white)'
+			: a?.emission === 'spectral'
+				? spectralColor(a.hz)
+				: fallback;
+	/** Callout-line colour: spectral only for a colour-true emitter (a laser/LED); else layer colour. */
+	const lineColorOf = (a: Allocation | null, fallback: string): string =>
+		a?.emission === 'spectral' ? spectralColor(a.hz) : fallback;
+
+	/**
+	 * When a gas/discharge (a `lines` entry) is selected, its spectrum is the one to read — so every
+	 * *other* discharge's lines dim out of the way, untangling the otherwise-overlapping forest of
+	 * ticks. Null when the selection isn't a line emitter (then nothing dims).
+	 */
+	let selectedGasId = $derived.by<string | null>(() => {
+		if (!$gasIsolated || !selected) return null;
+		const a = allocations.find((x) => x.id === selected);
+		return a?.lines && a.lines.length > 0 ? selected : null;
+	});
+
 	interface IconPlacement {
 		glyph: string;
 		x: number;
@@ -61,12 +92,29 @@
 	): IconPlacement[] {
 		if (!a?.reqLicense) return [];
 
-		// Sub-banded band with real width: a glyph on each opaque section, centred on it.
+		// Sub-banded band with real width: a glyph on each opaque section, centred on it. Adjacent
+		// enabled sub-bands of the *same* class are merged into one run first, so a band split only
+		// by operating mode (10 m: Technician 28.0–28.3 data + 28.3–28.5 phone) shows a single "T",
+		// not one per mode — the class is contiguous even though the mode isn't (the mode split still
+		// lives in the inspector strip).
 		if (bar && hasPrivilegePlan(a.id)) {
 			const enabled = privilegeBands(a.id, license).filter((b) => b.enabled);
-			if (enabled.length > 0) {
+			const runs: {
+				loHz: number;
+				hiHz: number;
+				minLicense: (typeof enabled)[number]['minLicense'];
+			}[] = [];
+			for (const b of enabled) {
+				const last = runs[runs.length - 1];
+				if (last && last.minLicense === b.minLicense && Math.abs(b.loHz - last.hiHz) < 1) {
+					last.hiHz = b.hiHz;
+				} else {
+					runs.push({ loHz: b.loHz, hiHz: b.hiHz, minLicense: b.minLicense });
+				}
+			}
+			if (runs.length > 0) {
 				const out: IconPlacement[] = [];
-				for (const b of enabled) {
+				for (const b of runs) {
 					const x0 = logPos(b.loHz, domain) * width;
 					const x1 = logPos(b.hiHz, domain) * width;
 					if (x1 - x0 >= SECTION_GLYPH_PX) {
@@ -99,8 +147,6 @@
 	 */
 	function barOf(a: Allocation | null): { x0: number; x1: number; w: number } | null {
 		if (!a?.band) return null;
-		// The visible region IS the rainbow — don't box it; a small pin points to the spot.
-		if (a.region === 'visible') return null;
 		const x0 = logPos(a.band[0], domain) * width;
 		const x1 = logPos(a.band[1], domain) * width;
 		const w = x1 - x0;
@@ -163,12 +209,17 @@
 		return licenseRank(license) < licenseRank(a.reqLicense);
 	}
 
-	// Filter to the visible set, then recolour dual-layer entries (e.g. UV-A) to whichever of their
-	// two layers is currently on — physical-science preferred — before grouping reads `.layer`.
+	// Filter to the visible set (application tier only — assignments ride the middle lane and the
+	// substrate is the bottom tier). A dual-layer entry (e.g. IR heat or a laser, science + consumer)
+	// keeps its *own* identity colour — its primary layer, or its sampled spectral colour for an
+	// emitter — even when it's the alt (consumer) layer that's currently showing it. Dual-licensing
+	// governs visibility, not colour.
 	let visible = $derived(
-		visibleAllocations(allocations, 3, layers).map((a) =>
-			a.altLayer ? { ...a, layer: effectiveLayer(a, layers) } : a
-		)
+		visibleAllocations(allocations, 3, layers)
+			.filter((a) => a.tier !== 'assignment')
+			// Visible-light sub-filter: hide an optical entry whose group (laser/LED/gas/firework)
+			// is toggled off. Entries without an `optical` group are unaffected.
+			.filter((a) => !a.optical || $visibleGroups[a.optical])
 	);
 
 	let layout = $derived(layoutSpectrum(visible, domain, width, fmtFreq, { lanes: LANE_Y.length }));
@@ -330,6 +381,72 @@
 	{/if}
 {/snippet}
 
+<!-- Optical entry (laser / LED / emission line): drawn in the physical colour of its light. A
+     real-bandwidth band shows as a translucent bracket so the spectrum gradient reads through it;
+     a point shows as a small filled dot. Both carry a hairline outline so a same-coloured marker
+     stays visible over the matching gradient. -->
+{#snippet opticalShape(
+	alloc: Allocation,
+	bar: { x0: number; w: number } | null,
+	x: number,
+	sel: boolean
+)}
+	{@const col = fillOf(alloc, spectralColor(alloc.hz))}
+	{@const solid = alloc.optical === 'led' && alloc.emission !== 'white'}
+	{#if alloc.lines && alloc.lines.length > 0}
+		<!-- The selected discharge gets a padded envelope so its full range — including the faint
+		     edge lines at the very top and bottom — is easy to pick out. Drawn behind the ticks. -->
+		{#if sel && alloc.band}
+			{@const bx0 = logPos(alloc.band[0], domain) * width}
+			{@const bx1 = logPos(alloc.band[1], domain) * width}
+			<rect
+				x={bx0 - 6}
+				y={bandMid - 13}
+				width={bx1 - bx0 + 12}
+				height="26"
+				rx="4"
+				class="emission-box"
+			/>
+		{/if}
+		<!-- A discrete-line emitter (gas discharge / flame): one spectral tick per emission line. -->
+		{#each alloc.lines as ln, i (i)}
+			{@const lx = logPos(ln, domain) * width}
+			<rect
+				x={lx - (sel ? 1.25 : 1)}
+				y={bandMid - (sel ? 10 : 8)}
+				width={sel ? 2.5 : 2}
+				height={sel ? 20 : 16}
+				style="fill: {spectralColor(ln)}"
+				class="emission-line"
+				class:sel
+				class:dim={selectedGasId !== null && alloc.id !== selectedGasId}
+			/>
+		{/each}
+	{:else if bar}
+		<rect
+			x={bar.x0}
+			y={bandMid - (sel ? 8 : 6)}
+			width={bar.w}
+			height={sel ? 16 : 12}
+			rx="2.5"
+			style="fill: {col}"
+			class="optical-bar"
+			class:sel
+			class:solid
+		/>
+	{:else}
+		<circle
+			cx={x}
+			cy={bandMid}
+			r={sel ? 6 : 4}
+			style="fill: {col}"
+			class="optical-dot"
+			class:sel
+			class:solid
+		/>
+	{/if}
+{/snippet}
+
 <!-- Layer 1 — neighbourhood envelopes. Kept beneath every entry so a wide transparent span
      never splits a narrow band's bar (the labelled chip in layer 3 is the real button; this
      stays a mouse target but is hidden from assistive tech to avoid a double announcement). -->
@@ -364,10 +481,10 @@
 		onclick={() => select(d.id)}
 		onkeydown={(e) => onKey2(e, d.id)}
 	>
-		{#if bar}
+		{#if emits(d.alloc)}
+			{@render opticalShape(d.alloc, bar, d.x, sel)}
+		{:else if bar}
 			{@render bandShape(d.alloc, bar, `var(--layer-${d.layer})`, 10, 2.5, 'band-bar', sel)}
-		{:else if d.region === 'visible'}
-			<circle cx={d.x} cy={bandMid} r={sel ? 5 : 3.5} class="pin" class:sel />
 		{:else}
 			<circle
 				cx={d.x}
@@ -429,11 +546,15 @@
 			x2={item.x}
 			y2={bandMid}
 			class="line"
-			style="stroke: {sel ? p.color : 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
+			style="stroke: {sel
+				? lineColorOf(item.alloc ?? null, p.color)
+				: 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
 		/>
-		{#if bar}
+		{#if emits(item.alloc ?? null)}
+			{@render opticalShape(item.alloc!, bar, item.x, sel)}
+		{:else if bar}
 			{@render bandShape(item.alloc!, bar, p.color, 12, 3, 'leaf-bar', sel)}
-		{:else if item.alloc?.region !== 'visible'}
+		{:else}
 			<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
 			<circle
 				cx={item.x}
@@ -444,8 +565,6 @@
 				class:sel
 				class:muted={mutedAmateur(item.alloc ?? null)}
 			></circle>
-		{:else}
-			<circle cx={item.x} cy={bandMid} r={sel ? 6 : 4} class="pin" class:sel />
 		{/if}
 		{#each ics as ic, ii (ii)}
 			<text x={ic.x} y={bandMid} class="license-icon" class:on-bar={ic.onBar} class:sel>
@@ -512,18 +631,56 @@
 		stroke: var(--ink);
 		filter: drop-shadow(0 0 6px currentColor);
 	}
-	/* Visible-light pin: a small neutral marker that points to a spot on the rainbow without
-	   boxing over it (the rainbow already shows the colour). */
-	.pin {
-		fill: var(--panel);
+	/* Optical entry drawn in its own light's colour. The translucent bar lets the spectrum
+	   gradient read through (so it's a bracket over the rainbow, not a box); the hairline outline
+	   keeps a same-coloured marker visible against the matching gradient. */
+	.optical-bar {
+		opacity: 0.5;
 		stroke: var(--ink);
+		stroke-width: 1;
+	}
+	/* Coloured LEDs read as solid blocks of their colour (not translucent brackets). */
+	.optical-bar.solid,
+	.optical-dot.solid {
+		opacity: 1;
+	}
+	.optical-bar.sel {
+		opacity: 0.85;
 		stroke-width: 1.5;
+		filter: drop-shadow(0 0 5px currentColor);
 	}
-	.pin.sel {
-		stroke-width: 2;
-		filter: drop-shadow(0 0 5px var(--ink));
+	.optical-dot {
+		stroke: var(--ink);
+		stroke-width: 1.3;
 	}
-	.band-marker:focus-visible .pin,
+	.optical-dot.sel {
+		stroke-width: 1.8;
+		filter: drop-shadow(0 0 5px currentColor);
+	}
+	/* Keep solid LEDs fully opaque even when selected (higher specificity than the .sel rules). */
+	.optical-bar.solid.sel,
+	.optical-dot.solid.sel {
+		opacity: 1;
+	}
+	/* A single emission line — a thin spectral spike, one per line of a discharge/flame spectrum. */
+	.emission-line {
+		stroke: var(--marker-stroke);
+		stroke-width: 0.5;
+	}
+	.emission-line.sel {
+		filter: drop-shadow(0 0 4px currentColor);
+	}
+	/* When one discharge is selected, the others fade so its spectrum stands out from the noise. */
+	.emission-line.dim {
+		opacity: 0.1;
+	}
+	/* Padded envelope around the selected discharge's lines — brackets its full range. */
+	.emission-box {
+		fill: color-mix(in srgb, var(--ink) 6%, transparent);
+		stroke: var(--sub);
+		stroke-width: 1;
+		opacity: 0.7;
+	}
 	.band-marker:focus-visible .band-dot {
 		stroke: var(--ink);
 	}

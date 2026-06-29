@@ -2,6 +2,8 @@
 	import { licenseRank, type Allocation, type LicenseRank } from '$lib/data/types';
 	import { REGIONS } from '$lib/spectrum/bands';
 	import { fmtFreq, fmtPhotonEv, fmtWavelengthOf } from '$lib/spectrum/format';
+	import { resonanceSpectrum } from '$lib/spectrum/resonance';
+	import { planFor } from '$lib/spectrum/channels';
 	import { axisOptions } from '$lib/state/axis';
 	import {
 		LICENSE_ICON,
@@ -52,6 +54,23 @@
 	let bandText = $derived(
 		allocation.band ? `${fmtFreq(allocation.band[0])} – ${fmtFreq(allocation.band[1])}` : ''
 	);
+
+	// Frequency spectrum for a non-quantized multi-mode signal (the Schumann resonance): broad peaks
+	// belling down from the fundamental. The modes come from the same resonance plan that draws the
+	// width-bars on the band (a plan with `tone` set), so there's one source of truth.
+	const SPEC_W = 320;
+	const SPEC_H = 96;
+	let modeFreqs = $derived(
+		planFor(allocation.id)?.tone
+			? (planFor(allocation.id)!
+					.channels.filter((c) => c.bw != null)
+					.map((c) => c.hz) ?? [])
+			: []
+	);
+	let spectrum = $derived(
+		modeFreqs.length > 1 ? resonanceSpectrum(modeFreqs, SPEC_W, SPEC_H) : null
+	);
+	const peakLabel = (hz: number) => (hz < 10 ? hz.toFixed(1) : String(Math.round(hz)));
 	let reqClass = $derived(allocation.reqLicense);
 	let segments = $derived(privilegeStrip(allocation.id, license));
 	/** Distinct licence classes present in this band, low → high, for the glyph key. */
@@ -109,6 +128,41 @@
 	{/if}
 
 	<p class="note">{allocation.note}</p>
+
+	{#if spectrum}
+		<figure class="scope">
+			<svg
+				viewBox="-20 0 {SPEC_W + 20} {SPEC_H + 22}"
+				class="scope-svg"
+				role="img"
+				aria-label="Frequency spectrum of the {allocation.name}: broad peaks at {spectrum.peaks
+					.map((p) => peakLabel(p.hz))
+					.join(
+						', '
+					)} hertz, falling in strength from the fundamental — broad bumps, not sharp lines."
+			>
+				<rect class="scope-screen" x="0.5" y="0.5" width={SPEC_W - 1} height={SPEC_H - 1} rx="6" />
+				{#each spectrum.hGrid as gy (gy)}
+					<line x1="2" y1={gy} x2={SPEC_W - 2} y2={gy} class="grid" />
+				{/each}
+				{#each spectrum.peaks as p (p.hz)}
+					<line x1={p.x} y1="2" x2={p.x} y2={SPEC_H - 2} class="grid" />
+				{/each}
+				<path d={spectrum.area} class="spec-area" />
+				<path d={spectrum.curve} class="trace" />
+				<!-- axes -->
+				<text x={-SPEC_H / 2} y="-7" transform="rotate(-90)" text-anchor="middle" class="scope-axis"
+					>magnetic field (pT)</text
+				>
+				{#each spectrum.peaks as p (p.hz)}
+					<text x={p.x} y={SPEC_H + 11} text-anchor="middle" class="scope-axis"
+						>{peakLabel(p.hz)}</text
+					>
+				{/each}
+				<text x={SPEC_W} y={SPEC_H + 20} text-anchor="end" class="scope-axis">frequency (Hz)</text>
+			</svg>
+		</figure>
+	{/if}
 
 	{#if learnMore}
 		<!-- External explainer (absolute https), not an internal SvelteKit route. -->
@@ -271,6 +325,44 @@
 		font-size: 12.5px;
 		line-height: 1.5;
 		color: var(--sub);
+	}
+	/* Native-SVG spectrum analyser: a dark phosphor screen, a faint graticule with a drop-line at each
+	   mode, and a glowing green curve of broad peaks belling down from the fundamental — so "broad
+	   bumps, not sharp lines" reads at a glance. The screen stays dark in both themes (it's a screen). */
+	.scope {
+		margin: 0 0 14px;
+	}
+	.scope-svg {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.scope-screen {
+		fill: #0a0f0c;
+		stroke: var(--line);
+		stroke-width: 1;
+	}
+	.grid {
+		stroke: var(--layer-science);
+		stroke-width: 0.5;
+		opacity: 0.16;
+	}
+	.spec-area {
+		fill: var(--layer-science);
+		opacity: 0.12;
+	}
+	.trace {
+		fill: none;
+		stroke: var(--layer-science);
+		stroke-width: 1.6;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		filter: drop-shadow(0 0 2.5px var(--layer-science));
+	}
+	.scope-axis {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		fill: var(--faint);
 	}
 	.learn-more {
 		display: inline-block;

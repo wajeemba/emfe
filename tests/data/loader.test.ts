@@ -28,6 +28,16 @@ describe('allocations loader', () => {
 		const ids = referencedSources()
 			.map((s) => s.id)
 			.sort();
-		expect(ids).toEqual(['fcc-part97', 'fcc-tofa', 'itu-rr', 'nasa-ems']);
+		expect(ids).toEqual([
+			'fcc-part97',
+			'fcc-tofa',
+			'fireworks-chem',
+			'itu-rr',
+			'nasa-ems',
+			'nist-asd',
+			'rp-photonics',
+			'schumann-ref',
+			'spectrum-holdings'
+		]);
 	});
 });

@@ -60,14 +60,20 @@
 
 		<section>
 			<div class="eyebrow">Credits</div>
-			<p class="credit">Built by Exagrow Studios and Andrew SC Ahlfield.</p>
-			<p class="credit">© {copyrightYears} Exagrow Studios and Andrew SC Ahlfield</p>
+			<p class="credit">Built by Exagrow Studios &amp; Andrew SC Ahlfield · © {copyrightYears}.</p>
 			<p class="credit">
-				Code licensed under
+				Open source on
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-				<a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noreferrer noopener"
-					>Apache&nbsp;2.0</a
-				>; allocation data under
+				<a href="https://github.com/wajeemba/emfe" target="_blank" rel="noreferrer noopener"
+					>GitHub</a
+				>
+				— code under
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a
+					href="https://www.apache.org/licenses/LICENSE-2.0"
+					target="_blank"
+					rel="noreferrer noopener">Apache&nbsp;2.0</a
+				>, data under
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="https://creativecommons.org/licenses/by/4.0/"
@@ -201,10 +207,15 @@
 		color: var(--sub);
 	}
 	.credit {
-		margin: 0 0 8px;
+		margin: 0 0 2px;
 		font-size: 12.5px;
 		line-height: 1.5;
 		color: var(--sub);
+	}
+	/* The licensing line that follows the copyright reads as one block with it (no gap). The
+	   Claude-Code build note that follows gets a little air to set it apart. */
+	.credit + .credit:last-child {
+		margin-top: 8px;
 	}
 	.credit:last-child {
 		margin-bottom: 0;
