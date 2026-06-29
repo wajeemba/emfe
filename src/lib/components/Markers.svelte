@@ -60,6 +60,17 @@
 	const lineColorOf = (a: Allocation | null, fallback: string): string =>
 		a?.emission === 'spectral' ? spectralColor(a.hz) : fallback;
 
+	/**
+	 * When a gas/discharge (a `lines` entry) is selected, its spectrum is the one to read — so every
+	 * *other* discharge's lines dim out of the way, untangling the otherwise-overlapping forest of
+	 * ticks. Null when the selection isn't a line emitter (then nothing dims).
+	 */
+	let selectedGasId = $derived.by<string | null>(() => {
+		if (!selected) return null;
+		const a = allocations.find((x) => x.id === selected);
+		return a?.lines && a.lines.length > 0 ? selected : null;
+	});
+
 	interface IconPlacement {
 		glyph: string;
 		x: number;
@@ -376,6 +387,7 @@
 				style="fill: {spectralColor(ln)}"
 				class="emission-line"
 				class:sel
+				class:dim={selectedGasId !== null && alloc.id !== selectedGasId}
 			/>
 		{/each}
 	{:else if bar}
@@ -625,6 +637,10 @@
 	}
 	.emission-line.sel {
 		filter: drop-shadow(0 0 4px currentColor);
+	}
+	/* When one discharge is selected, the others fade so its spectrum stands out from the noise. */
+	.emission-line.dim {
+		opacity: 0.1;
 	}
 	.band-marker:focus-visible .band-dot {
 		stroke: var(--ink);

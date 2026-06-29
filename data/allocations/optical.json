@@ -160,7 +160,7 @@
 		"layer": "science",
 		"region": "visible",
 		"minLod": 3,
-		"note": "The Balmer series of atomic hydrogen — Hα (656 nm, red), Hβ (486 nm, cyan), Hγ (434 nm) and Hδ (410 nm, violet). Mixed, they give a hydrogen discharge tube its pink glow; Hα alone is the deep red of the Sun's chromosphere and of glowing nebulae.",
+		"note": "The Balmer series of atomic hydrogen in a discharge tube — Hα (656 nm, red), Hβ (486 nm, cyan), Hγ (434 nm) and Hδ (410 nm, violet) — mixing to a pink glow; Hα alone is the deep red of the Sun’s chromosphere and glowing nebulae. (Note: a hydrogen *flame* is nearly invisible, pale blue — the orange of an ordinary fire is incandescent soot, a blackbody, not hydrogen.)",
 		"source": "nist-asd",
 		"optical": "gas"
 	},
