@@ -22,5 +22,11 @@
 		"title": "NASA Science — Tour of the Electromagnetic Spectrum",
 		"url": "https://science.nasa.gov/ems/",
 		"retrieved": "2026-06-26"
+	},
+	{
+		"id": "spectrum-holdings",
+		"title": "FCC auctions & public carrier/operator spectrum holdings (approximate, national)",
+		"url": "https://www.fcc.gov/auctions",
+		"retrieved": "2026-06-29"
 	}
 ]

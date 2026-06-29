@@ -92,6 +92,12 @@ export interface RawAllocation {
 	minLod: Lod;
 	/** Amateur license required to transmit, when applicable. */
 	reqLicense?: LicenseRank;
+	/**
+	 * Operator/licensee key for an `assignment`-tier holding (e.g. `verizon`, `tmobile`, `siriusxm`,
+	 * `gps`). Drives the colour + label of an operator band in the assignment lane. See
+	 * `spectrum/operators`. Approximate, national-level — not a per-market ULS record.
+	 */
+	operator?: string;
 	note: string;
 	/** Source id (resolved to a {@link SourceRef} by the loader). */
 	source: string;

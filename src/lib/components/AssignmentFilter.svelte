@@ -21,12 +21,13 @@
 </div>
 
 <p class="blurb">
-	Specific frequencies <em>designated</em> for one job — distress, calling and emergency channels — as
-	opposed to a band's broad allocation.
+	Who actually <em>holds</em> a band nationally — carriers and satellite operators — plus the single
+	frequencies <em>designated</em> for one job (distress, calling, emergency).
 </p>
 <ul class="legend" class:dim={!on}>
-	<li>Marine Ch 16 · 121.5 &amp; 243 guard</li>
-	<li>CB Ch 9 · 2&nbsp;m calling</li>
+	<li>Verizon · AT&amp;T · T-Mobile · Dish</li>
+	<li>SiriusXM · Globalstar · Iridium · GPS · Starlink</li>
+	<li>Marine Ch 16 · 121.5 guard · CB Ch 9</li>
 </ul>
 
 <style>
