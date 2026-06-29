@@ -65,19 +65,21 @@
 		text-transform: uppercase;
 	}
 	.master {
+		/* inline-flex so the .switch (a span) is a flex item — otherwise width/height don't apply
+		   to it as an inline element and the pill collapses to zero width. */
+		display: inline-flex;
 		border: none;
 		background: transparent;
 		padding: 0;
 		cursor: pointer;
-		line-height: 0;
 	}
-	/* A neutral light-grey track (not tied to any one layer colour); the knob position carries
-	   the state. (The per-row switches turn their layer colour; the master stays neutral grey.) */
+	/* Off = the same dark track as the per-row switches; On = a toned-down "everyday" accent so it
+	   reads as active rather than a bright disabled grey. The knob position carries the state. */
 	.master .switch {
 		background: var(--panelb);
 	}
 	.master.on .switch {
-		background: var(--sub);
+		background: color-mix(in srgb, var(--layer-consumer) 55%, var(--panelb));
 	}
 	.master.on .knob {
 		left: 15px;

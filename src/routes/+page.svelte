@@ -15,6 +15,7 @@
 	import { PLOT } from '$lib/components/plot-layout';
 	import Axis from '$lib/components/Axis.svelte';
 	import Markers from '$lib/components/Markers.svelte';
+	import Channels from '$lib/components/Channels.svelte';
 	import RegionLabels from '$lib/components/RegionLabels.svelte';
 	import SpectrumBand from '$lib/components/SpectrumBand.svelte';
 	import Dock from '$lib/components/Dock.svelte';
@@ -109,7 +110,8 @@
 <a href="#explorer" class="skip-link">Skip to the spectrum explorer</a>
 
 <!-- When the inspector is pinned, the whole layout slides left so the docked drawer and the
-     number line stay side by side without overlap (desktop side-sheet only). -->
+     number line stay side by side without overlap (desktop side-sheet only). Closing the drawer
+     unpins it (see onclose), so the space is always reclaimed. -->
 <div class="layout" class:pinned={$inspectorPinned}>
 	<main>
 		<section class="card">
@@ -156,6 +158,7 @@
 							license={$license}
 						/>
 						<RegionLabels {width} domain={$visibleDomain} />
+						<Channels {width} domain={$visibleDomain} layers={$layers} license={$license} />
 						<Axis
 							{width}
 							domain={$visibleDomain}
@@ -194,7 +197,10 @@
 		allocation={$selectedAllocation}
 		license={$license}
 		open={$selection !== null}
-		onclose={clearSelection}
+		onclose={() => {
+			clearSelection();
+			inspectorPinned.set(false);
+		}}
 	/>
 </div>
 

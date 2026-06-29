@@ -77,6 +77,32 @@ JetBrains Mono replaces IBM Plex Mono, which has no variable build.
   ends (below ELF and above gamma): asymptotically there is always a lower and a
   higher frequency.
 
+## Develop
+
+Requires Node 20+ and npm.
+
+```bash
+npm install      # first time only
+npm run dev      # dev server with HMR → http://localhost:5173
+```
+
+Build & preview the production bundle:
+
+```bash
+npm run build
+npm run preview  # → http://localhost:4173
+```
+
+Checks (the pre-commit gate / CI):
+
+```bash
+npm run check          # svelte-check (types)
+npm run lint           # prettier --check + eslint
+npm test               # vitest unit tests
+npm run test:e2e       # Playwright end-to-end (auto build + preview)
+npm run data:validate  # validate the allocation dataset against the schema
+```
+
 ## Status
 
 Early development. Building toward a live deployment.

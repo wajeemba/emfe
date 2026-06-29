@@ -179,10 +179,18 @@ export function layoutSpectrum(
 	const obstacles = options.obstacles ?? [];
 	const xOf = (hz: number) => logPos(hz, domain) * width;
 
-	// Dots: every visible allocation, positioned on the band.
+	// On-screen test, anchored to the *band* (not just the centre frequency) so a wide allocation
+	// keeps its bar while any part of its range is visible — even when its centre scrolls off.
+	const onScreen = (a: Allocation): boolean => {
+		if (a.band) return xOf(a.band[1]) >= -40 && xOf(a.band[0]) <= width + 40;
+		const x = xOf(a.hz);
+		return x >= -40 && x <= width + 40;
+	};
+
+	// Dots: every visible allocation whose band (or point) overlaps the plot, positioned on the band.
 	const dots: Dot[] = visible
 		.map((a) => ({ id: a.id, x: xOf(a.hz), layer: a.layer, region: a.region, alloc: a }))
-		.filter((d) => d.x >= -40 && d.x <= width + 40);
+		.filter((d) => onScreen(d.alloc));
 
 	// Bucket the visible allocations into families, preserving frequency order.
 	const byFamily = new Map<string, Allocation[]>();
@@ -208,7 +216,24 @@ export function layoutSpectrum(
 
 	const pushLeaf = (a: Allocation) => {
 		const freq = fmtFreq(a.hz);
-		const x = xOf(a.hz);
+		const labelW = leafLabelWidth(a, freq);
+		const centerX = xOf(a.hz);
+		let x = centerX;
+		let loX = centerX;
+		let hiX = centerX;
+		if (a.band) {
+			loX = xOf(a.band[0]);
+			hiX = xOf(a.band[1]);
+			// When the band overlaps the viewport, anchor the label over its on-screen slice
+			// (clamped to the edges), the way group chips do — so the label and bar stay visible
+			// even once the centre frequency scrolls off. Otherwise keep the (off-screen) centre,
+			// and lane placement drops the label as before.
+			if (hiX > 0 && loX < width) {
+				const half = labelW / 2;
+				const sliceCenter = (Math.max(loX, 0) + Math.min(hiX, width)) / 2;
+				x = Math.min(Math.max(sliceCenter, half + 2), width - half - 2);
+			}
+		}
 		candidates.push({
 			kind: 'leaf',
 			id: a.id,
@@ -216,13 +241,13 @@ export function layoutSpectrum(
 			sublabel: freq,
 			aria: `${a.name}, ${freq}`,
 			x,
-			loX: x,
-			hiX: x,
+			loX,
+			hiX,
 			count: 1,
 			layer: a.layer,
 			alloc: a,
 			members: [a],
-			width: leafLabelWidth(a, freq)
+			width: labelW
 		});
 	};
 

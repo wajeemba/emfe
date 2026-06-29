@@ -276,7 +276,7 @@
 		"id": "cb",
 		"name": "CB radio",
 		"hz": 27000000,
-		"band": [26900000, 27400000],
+		"band": [26965000, 27405000],
 		"layer": "amateur",
 		"region": "radio",
 		"minLod": 2,
@@ -394,13 +394,28 @@
 		"id": "murs",
 		"name": "MURS",
 		"hz": 152000000,
-		"band": [151820000, 154600000],
+		"band": [151810000, 154610000],
+		"segments": [
+			[151810000, 151950000],
+			[154560000, 154610000]
+		],
 		"layer": "amateur",
 		"region": "radio",
 		"minLod": 3,
 		"reqLicense": "unlicensed",
-		"note": "Multi-Use Radio Service — five license-free VHF channels (151.82–154.60 MHz), 2 W. Like FRS but lower in frequency, with better outdoor range.",
+		"note": "Multi-Use Radio Service — five license-free VHF channels, 2 W: three at 151.82–151.94 MHz and two at 154.57–154.60 MHz. The ~2.6 MHz between them is other VHF land-mobile, not MURS. Like FRS but lower in frequency, with better outdoor range.",
 		"source": "fcc-part97"
+	},
+	{
+		"id": "lmr-vhf",
+		"name": "VHF land mobile",
+		"hz": 153000000,
+		"band": [150800000, 156250000],
+		"layer": "gov",
+		"region": "radio",
+		"minLod": 3,
+		"note": "VHF business & public-safety two-way radio — the licensed land-mobile pool (utilities, security, local government, transport) that fills the VHF high band, interleaved with MURS and just below the marine channels.",
+		"source": "fcc-tofa"
 	},
 	{
 		"id": "marine-vhf",
@@ -526,26 +541,42 @@
 		"source": "fcc-part97"
 	},
 	{
+		"id": "lmr-uhf",
+		"name": "UHF land mobile",
+		"hz": 460000000,
+		"band": [450000000, 470000000],
+		"layer": "gov",
+		"region": "microwave",
+		"minLod": 3,
+		"note": "UHF business & public-safety two-way radio (450–470 MHz) — the licensed land-mobile pool (utilities, security, taxis, local government) that fills the gap between the walkie-talkie channel groups.",
+		"source": "fcc-tofa"
+	},
+	{
 		"id": "frs",
-		"name": "FRS / GMRS",
+		"name": "Walkie-talkie",
 		"hz": 465000000,
-		"band": [462000000, 467000000],
-		"layer": "amateur",
+		"band": [462537500, 467725000],
+		"segments": [
+			[462537500, 462737500],
+			[467550000, 467725000]
+		],
+		"layer": "consumer",
+		"altLayer": "amateur",
 		"region": "radio",
 		"minLod": 3,
 		"reqLicense": "unlicensed",
-		"note": "FRS is license-free — the bubble-pack walkie-talkies, 22 channels at up to 2 W. GMRS shares those channels but unlocks much more: up to 50 W, removable antennas and repeaters for far greater range. GMRS needs a licence, but there's no exam — a $35 FCC permit covers your whole family for 10 years.",
+		"note": "FRS & GMRS bubble-pack walkie-talkies — two channel groups, at 462 MHz (channels 1–7, 15–22) and 467 MHz (channels 8–14); the 463–467 MHz between them is other UHF land-mobile, not walkie-talkie. FRS is license-free (up to 2 W). A $35 GMRS licence (no exam, 10 years, whole family) buys high power (up to 50 W) on channels 1–7 and 15–22 — but on the *same* channels FRS uses, so a GMRS radio can drown out unlicensed users there. The real GMRS payoff is the 8 repeater-input channels (467.55–467.725 MHz, shown in purple), which FRS may not use: pairing with a hilltop repeater extends range far beyond simplex. An amateur (ham) licence does NOT cover GMRS — separate services (FCC Part 95 vs Part 97), so a Technician still buys the GMRS permit.",
 		"source": "fcc-part97"
 	},
 	{
 		"id": "tv",
 		"name": "TV (UHF)",
-		"hz": 600000000,
-		"band": [470000000, 698000000],
+		"hz": 550000000,
+		"band": [470000000, 608000000],
 		"layer": "consumer",
 		"region": "radio",
 		"minLod": 3,
-		"note": "Digital TV broadcast (ATSC). Also reused for cellular post-repack.",
+		"note": "Digital TV broadcast (ATSC) — UHF channels 14–36 (470–608 MHz). The old top end (ch 38–51, 614–698 MHz) was reclaimed in the 2017 \"repack\" and handed to 600 MHz 5G, so UHF TV no longer reaches up into the cellular band.",
 		"source": "fcc-tofa"
 	},
 	{
@@ -1055,17 +1086,6 @@
 		"region": "infrared",
 		"minLod": 3,
 		"note": "LIDAR — pulsed near-infrared light (commonly 905 nm; some automotive units use 1550 nm) for self-driving perception and 3-D mapping. Note it's *light*, not the 77 GHz radio of automotive radar.",
-		"source": "nasa-ems"
-	},
-	{
-		"id": "vis",
-		"name": "Visible light",
-		"hz": 540000000000000,
-		"band": [428000000000000, 769000000000000],
-		"layer": "science",
-		"region": "visible",
-		"minLod": 0,
-		"note": "The single octave the eye detects (390–700 nm) — a sliver of the whole spectrum.",
 		"source": "nasa-ems"
 	},
 	{

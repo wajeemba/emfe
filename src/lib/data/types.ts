@@ -53,6 +53,12 @@ export interface RawAllocation {
 	hz: number;
 	/** Inclusive [low, high] frequency span, Hz — when the entry is a range. */
 	band?: [number, number];
+	/**
+	 * Occupied sub-ranges within `band`, for a service whose allocation is split across separate
+	 * groups (e.g. the 462 + 467 MHz walkie-talkie channels). When present, the bar renders as
+	 * these pieces instead of one solid span — so the empty gap between them isn't drawn as used.
+	 */
+	segments?: [number, number][];
 	layer: LayerId;
 	/**
 	 * Optional second content layer this allocation also belongs to. It shows when *either* layer

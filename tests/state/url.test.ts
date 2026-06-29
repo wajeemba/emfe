@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
 import { LAYERS, type LayerId } from '$lib/data/types';
 import { FULL_DOMAIN } from '$lib/spectrum/scale';
+import { ZOOM_RANGE } from '$lib/spectrum/zoom';
 
 const allOn = () => Object.fromEntries(LAYERS.map((l) => [l, true])) as Record<LayerId, boolean>;
 
@@ -74,7 +75,7 @@ describe('decodeState — malformed input degrades safely', () => {
 
 	it('clamps an out-of-range zoom and center', () => {
 		const back = decodeState(new URLSearchParams('z=99999&c=-50'), FULL_DOMAIN);
-		expect(back.zoom).toBeLessThanOrEqual(4096);
+		expect(back.zoom).toBeLessThanOrEqual(ZOOM_RANGE.max);
 		expect(back.centerExp).toBeGreaterThanOrEqual(FULL_DOMAIN.minExp);
 		expect(back.centerExp).toBeLessThanOrEqual(FULL_DOMAIN.maxExp);
 	});

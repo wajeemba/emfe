@@ -70,6 +70,19 @@
 		return w >= MIN_BAR_PX ? { x0, x1, w } : null;
 	}
 
+	/**
+	 * The on-screen rects to draw for a bar — one per occupied {@link Allocation.segments} group
+	 * when present (so the unused gap between groups isn't filled), else the single band span.
+	 */
+	function segmentsOf(a: Allocation | null): { x0: number; w: number }[] {
+		if (!a) return [];
+		const ranges = a.segments ?? (a.band ? [a.band] : []);
+		return ranges.map(([lo, hi]) => {
+			const x0 = logPos(lo, domain) * width;
+			return { x0, w: logPos(hi, domain) * width - x0 };
+		});
+	}
+
 	// Filter to the visible set, then recolour dual-layer entries (e.g. UV-A) to whichever of their
 	// two layers is currently on — physical-science preferred — before grouping reads `.layer`.
 	let visible = $derived(
@@ -197,17 +210,31 @@
 		onkeydown={(e) => onKey2(e, d.id)}
 	>
 		{#if bar}
-			<!-- real bandwidth: a bar of the allocation's true width -->
-			<rect
-				x={bar.x0}
-				y={bandMid - 5}
-				width={bar.w}
-				height="10"
-				rx="2.5"
-				style="fill: var(--layer-{d.layer})"
-				class="band-bar"
-				class:sel
-			/>
+			<!-- Faint full-span connector ties split segments together as one service. -->
+			{#if d.alloc.segments}
+				<rect
+					x={bar.x0}
+					y={bandMid - 5}
+					width={bar.w}
+					height="10"
+					rx="2.5"
+					style="fill: var(--layer-{d.layer})"
+					class="seg-connector"
+				/>
+			{/if}
+			<!-- real bandwidth: one bar per occupied segment (a single span when not segmented) -->
+			{#each segmentsOf(d.alloc) as s, si (si)}
+				<rect
+					x={s.x0}
+					y={bandMid - 5}
+					width={Math.max(s.w, 2)}
+					height="10"
+					rx="2.5"
+					style="fill: var(--layer-{d.layer})"
+					class="band-bar"
+					class:sel
+				/>
+			{/each}
 		{:else if d.region === 'visible'}
 			<circle cx={d.x} cy={bandMid} r={sel ? 5 : 3.5} class="pin" class:sel />
 		{:else}
@@ -273,17 +300,31 @@
 			style="stroke: {sel ? p.color : 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
 		/>
 		{#if bar}
-			<!-- real-bandwidth bar for the labelled leaf -->
-			<rect
-				x={bar.x0}
-				y={bandMid - 6}
-				width={bar.w}
-				height="12"
-				rx="3"
-				style="fill: {p.color}"
-				class="leaf-bar"
-				class:sel
-			/>
+			<!-- Faint full-span connector ties split segments together as one service. -->
+			{#if item.alloc?.segments}
+				<rect
+					x={bar.x0}
+					y={bandMid - 6}
+					width={bar.w}
+					height="12"
+					rx="3"
+					style="fill: {p.color}"
+					class="seg-connector"
+				/>
+			{/if}
+			<!-- real-bandwidth bar(s) for the labelled leaf — one per occupied segment -->
+			{#each segmentsOf(item.alloc) as s, si (si)}
+				<rect
+					x={s.x0}
+					y={bandMid - 6}
+					width={Math.max(s.w, 2)}
+					height="12"
+					rx="3"
+					style="fill: {p.color}"
+					class="leaf-bar"
+					class:sel
+				/>
+			{/each}
 		{:else if item.alloc?.region !== 'visible'}
 			<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
 			<circle cx={item.x} cy={bandMid} r={sel ? 7 : 5} style="fill: {p.color}" class="dot" class:sel
@@ -387,6 +428,11 @@
 	}
 	.span:hover {
 		opacity: 0.5;
+	}
+	/* Faint bridge across the unused gap between a split allocation's occupied segments, so the
+	   two bars read as one service rather than two unrelated bands. */
+	.seg-connector {
+		opacity: 0.16;
 	}
 	.group-line {
 		stroke: var(--panelb);

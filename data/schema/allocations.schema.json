@@ -19,6 +19,16 @@
 					"minItems": 2,
 					"maxItems": 2
 				},
+				"segments": {
+					"type": "array",
+					"items": {
+						"type": "array",
+						"items": { "type": "number", "exclusiveMinimum": 0 },
+						"minItems": 2,
+						"maxItems": 2
+					},
+					"minItems": 1
+				},
 				"layer": {
 					"enum": ["consumer", "amateur", "navigation", "gov", "science"]
 				},

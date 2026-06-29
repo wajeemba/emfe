@@ -18,11 +18,11 @@ export interface ZoomView {
 }
 
 /**
- * Magnification bounds: 1 = whole spectrum. Max is deep enough (~0.006-decade window) to pull
- * apart even the tightest neighbours in the dataset — e.g. the 433 MHz ISM key-fob band and
- * the 70 cm amateur band sit ~0.001 decade apart and must become individually resolvable.
+ * Magnification bounds: 1 = whole spectrum. Max is deep enough (~0.0007-decade window, well under
+ * 1 MHz around 460 MHz) to resolve the *individual numbered channels* of the tightest plans —
+ * walkie-talkie and MURS channels sit only 12.5 kHz apart and must spread out enough to label.
  */
-export const ZOOM_RANGE = { min: 1, max: 4096 } as const;
+export const ZOOM_RANGE = { min: 1, max: 32768 } as const;
 
 /** Clamp a magnification into {@link ZOOM_RANGE}. */
 export function clampZoom(zoom: number): number {

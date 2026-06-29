@@ -68,6 +68,27 @@ describe('layoutSpectrum — group-up', () => {
 		const { dots } = layoutSpectrum(allocs, FULL_DOMAIN, W, fmt);
 		expect(dots.length).toBe(30);
 	});
+
+	it('keeps a wide band visible (dot + labelled leaf) when its centre scrolls off-screen', () => {
+		// A band 26.9–27.5 MHz whose centre (27.2) sits left of a window that starts at 27.3 — the
+		// band's right edge is still in view, so its bar/label must not vanish (regression).
+		const band = alloc('cb', 27.2e6, { band: [26.9e6, 27.5e6] });
+		const dom: FreqDomain = { minExp: Math.log10(27.3e6), maxExp: Math.log10(27.9e6) };
+		const { dots, items } = layoutSpectrum([band], dom, W, fmt);
+		expect(dots.map((d) => d.id)).toContain('cb'); // band overlaps viewport → still a dot
+		const leaf = items.find((i) => i.id === 'cb' && i.kind === 'leaf');
+		expect(leaf, 'labelled leaf present').toBeDefined();
+		// …and its label is anchored on-screen (not at the off-screen centre).
+		expect(leaf!.x).toBeGreaterThanOrEqual(0);
+		expect(leaf!.x).toBeLessThanOrEqual(W);
+	});
+
+	it('drops a band whose range is entirely off-screen', () => {
+		const band = alloc('off', 27.2e6, { band: [26.9e6, 27.5e6] });
+		const dom: FreqDomain = { minExp: Math.log10(30e6), maxExp: Math.log10(40e6) };
+		const { dots } = layoutSpectrum([band], dom, W, fmt);
+		expect(dots).toHaveLength(0);
+	});
 });
 
 describe('layoutSpectrum — no overlaps (invariant)', () => {

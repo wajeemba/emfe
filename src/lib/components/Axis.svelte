@@ -1,8 +1,8 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { logPos, niceTicks, type FreqDomain } from '$lib/spectrum/scale';
-	import { fmtWavelengthOf, fmtFreqTicks, sciParts } from '$lib/spectrum/format';
+	import { type FreqDomain } from '$lib/spectrum/scale';
+	import { axisTicks, type AxisTick } from '$lib/spectrum/ticks';
 	import { PLOT } from './plot-layout';
 
 	let {
@@ -12,74 +12,27 @@
 		showLambda = false
 	}: { width: number; domain: FreqDomain; showExp?: boolean; showLambda?: boolean } = $props();
 
-	/** Decade labels at every third power of ten (1 Hz, 1 kHz, 1 MHz, …). */
-	const NAMES: Record<number, string> = {
-		0: '1 Hz',
-		3: '1 kHz',
-		6: '1 MHz',
-		9: '1 GHz',
-		12: '1 THz',
-		15: '1 PHz',
-		18: '1 EHz',
-		21: '1 ZHz',
-		24: '1 YHz'
-	};
+	// Adaptive ruler — powers of ten with a width-aware label interval at wide zooms, round 1-2-5
+	// frequencies once inside a decade. The scientific-notation toggle re-formats every label as
+	// `m×10ⁿ Hz`. (Pure logic + density regression test live in $lib/spectrum/ticks.)
+	let ticks = $derived(axisTicks(domain, width));
 
-	interface Tick {
-		id: string;
-		x: number;
-		major: boolean;
-		/** Whether this tick carries a label at all (decade minors are bare tick marks). */
-		labeled: boolean;
-		/** SI-prefixed label (e.g. "1 MHz" / "27 MHz") — shown when sci-notation is off. */
-		plain: string;
-		/** Scientific-notation parts (mantissa + exponent) — shown when sci-notation is on. */
-		mant: string;
-		sexp: number;
-		lambda: string;
+	const EDGE_PAD = 4;
+	/**
+	 * Keep an edge label fully on-screen: a label near the left/right edge anchors to its
+	 * start/end (extending inward) instead of centring on its tick, so the first and last labels
+	 * are never clipped at the axis ends.
+	 */
+	function anchorAt(x: number, estHalf: number): 'start' | 'middle' | 'end' {
+		if (x - estHalf < EDGE_PAD) return 'start';
+		if (x + estHalf > width - EDGE_PAD) return 'end';
+		return 'middle';
 	}
-
-	// Two tick regimes. Across many decades, label powers of ten (every third one named). Once you
-	// zoom inside ~3 decades the decade ruler thins out, so switch to round 1-2-5 frequencies that
-	// keep the scale readable — you can finally measure how wide a single band is. Either way, the
-	// scientific-notation toggle re-formats every label as `m×10ⁿ Hz` (not just the decade ruler).
-	let ticks = $derived.by<Tick[]>(() => {
-		const zoomedIn = domain.maxExp - domain.minExp < 3;
-		if (!zoomedIn) {
-			return Array.from({ length: 25 }, (_, exp) => {
-				const major = exp % 3 === 0;
-				const sci = sciParts(10 ** exp, 10 ** exp);
-				return {
-					id: `p${exp}`,
-					x: logPos(10 ** exp, domain) * width,
-					major,
-					labeled: major,
-					plain: NAMES[exp] ?? '',
-					mant: sci.mant,
-					sexp: sci.exp,
-					lambda: fmtWavelengthOf(10 ** exp)
-				} satisfies Tick;
-			}).filter((t) => t.x >= 0 && t.x <= width);
-		}
-		const values = niceTicks(10 ** domain.minExp, 10 ** domain.maxExp);
-		const step = values.length > 1 ? values[1] - values[0] : values[0] || 1;
-		const labels = fmtFreqTicks(values, step);
-		return values
-			.map((hz, i): Tick => {
-				const sci = sciParts(hz, step);
-				return {
-					id: `n${hz}`,
-					x: logPos(hz, domain) * width,
-					major: true,
-					labeled: true,
-					plain: labels[i],
-					mant: sci.mant,
-					sexp: sci.exp,
-					lambda: fmtWavelengthOf(hz)
-				};
-			})
-			.filter((t) => t.x >= 0 && t.x <= width);
-	});
+	/** Rough half-width (px) of a frequency tick's rendered label. */
+	function freqHalf(t: AxisTick): number {
+		const chars = showExp ? t.mant.length + 5 : t.plain.length; // "m×10ⁿ Hz" ≈ mant + 5 glyphs
+		return (chars * 6.6) / 2;
+	}
 </script>
 
 <line x1="0" y1={PLOT.axisY} x2={width} y2={PLOT.axisY} class="axis-line" />
@@ -88,22 +41,20 @@
 {#each ticks as t (t.id)}
 	<line x1={t.x} y1={PLOT.axisY} x2={t.x} y2={PLOT.axisY + (t.major ? 8 : 4)} class="tick" />
 	{#if t.labeled}
+		{@const fa = anchorAt(t.x, freqHalf(t))}
 		{#if showExp}
-			<text x={t.x} y={PLOT.axisY + 20} text-anchor="middle" class="tick-label"
+			<text x={t.x} y={PLOT.axisY + 20} text-anchor={fa} class="tick-label"
 				>{t.mant}×10<tspan class="exp" dy="-5">{t.sexp}</tspan> Hz</text
 			>
 		{:else}
-			<text x={t.x} y={PLOT.axisY + 20} text-anchor="middle" class="tick-label">{t.plain}</text>
+			<text x={t.x} y={PLOT.axisY + 20} text-anchor={fa} class="tick-label">{t.plain}</text>
 		{/if}
 	{/if}
 	{#if showLambda && t.major}
-		<text x={t.x} y={PLOT.axisY + 33} text-anchor="middle" class="lambda-label">{t.lambda}</text>
+		{@const la = anchorAt(t.x, (t.lambda.length * 6) / 2)}
+		<text x={t.x} y={PLOT.axisY + 33} text-anchor={la} class="lambda-label">{t.lambda}</text>
 	{/if}
 {/each}
-
-{#if showLambda}
-	<text x={width} y={PLOT.axisY + 33} text-anchor="end" class="lambda-axis">λ →</text>
-{/if}
 
 <style>
 	.axis-line {
@@ -131,10 +82,5 @@
 		font-size: 10px;
 		fill: var(--layer-science);
 		opacity: 0.9;
-	}
-	.lambda-axis {
-		font-family: var(--font-mono);
-		font-size: 10.5px;
-		fill: var(--faint);
 	}
 </style>

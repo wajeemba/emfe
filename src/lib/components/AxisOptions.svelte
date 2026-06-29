@@ -8,17 +8,6 @@
 	<button
 		type="button"
 		class="row"
-		class:on={$axisOptions.showExp}
-		role="switch"
-		aria-checked={$axisOptions.showExp}
-		onclick={toggleExp}
-	>
-		<span class="box" aria-hidden="true">{$axisOptions.showExp ? '✓' : ''}</span>
-		<span class="label">Scientific notation (10ⁿ)</span>
-	</button>
-	<button
-		type="button"
-		class="row"
 		class:on={$axisOptions.showLambda}
 		role="switch"
 		aria-checked={$axisOptions.showLambda}
@@ -26,6 +15,17 @@
 	>
 		<span class="box" aria-hidden="true">{$axisOptions.showLambda ? '✓' : ''}</span>
 		<span class="label">Wavelength λ (metres)</span>
+	</button>
+	<button
+		type="button"
+		class="row"
+		class:on={$axisOptions.showExp}
+		role="switch"
+		aria-checked={$axisOptions.showExp}
+		onclick={toggleExp}
+	>
+		<span class="box" aria-hidden="true">{$axisOptions.showExp ? '✓' : ''}</span>
+		<span class="label">Scientific notation (10ⁿ)</span>
 	</button>
 </div>
 

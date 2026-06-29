@@ -18,8 +18,7 @@ test('scientific-notation toggle reformats every tick as m×10ⁿ Hz', async ({ 
 test('wavelength row is on by default and the toggle hides it', async ({ page }) => {
 	await page.goto('/');
 
-	// Wavelength is shown by default now.
-	await expect(page.locator('text.lambda-axis', { hasText: 'λ →' })).toBeVisible();
+	// Wavelength labels are shown by default now.
 	await expect(page.locator('text.lambda-label')).not.toHaveCount(0);
 
 	await page.getByRole('switch', { name: /Wavelength/ }).click();
