@@ -14,7 +14,7 @@ export interface AxisOptions {
 
 export const axisOptions = writable<AxisOptions>({
 	showExp: false,
-	showLambda: false
+	showLambda: true
 });
 
 /** Toggle scientific-notation labels. */

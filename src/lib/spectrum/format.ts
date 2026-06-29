@@ -49,6 +49,20 @@ export function fmtFreq(hz: number): string {
 }
 
 /**
+ * Mantissa + exponent for scientific-notation tick labels, e.g. `5×10⁶ Hz`. `step` (the spacing
+ * to the next tick) sets how many mantissa decimals are needed to keep neighbours distinct, so
+ * 2.6/2.7/2.8 ×10⁷ don't all collapse to 3×10⁷.
+ */
+export function sciParts(value: number, step: number): { mant: string; exp: number } {
+	if (!(value > 0)) return { mant: '0', exp: 0 };
+	const exp = Math.floor(Math.log10(value) + 1e-9);
+	const mantissa = value / 10 ** exp;
+	const mantStep = step / 10 ** exp;
+	const decimals = Math.min(3, Math.max(0, -Math.floor(Math.log10(mantStep) + 1e-9)));
+	return { mant: mantissa.toFixed(decimals), exp };
+}
+
+/**
  * Format a list of axis-tick frequencies in one shared SI unit, with just enough decimal places
  * to tell neighbours `step` Hz apart. Plain {@link fmtFreq} rounds 26.9/27.0/27.1 MHz all to
  * "27 MHz"; deep in a zoom that hides the band's width, so the adaptive ruler uses this instead.

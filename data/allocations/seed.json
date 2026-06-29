@@ -312,11 +312,16 @@
 		"id": "mri",
 		"name": "MRI RF",
 		"hz": 64000000,
+		"band": [8500000, 128000000],
 		"layer": "science",
 		"region": "radio",
 		"minLod": 3,
-		"note": "The RF pulse that flips proton spins inside a 1.5-tesla MRI magnet (≈64 MHz).",
-		"source": "nasa-ems"
+		"note": "The RF pulse that flips proton spins in an MRI scanner. Its frequency is the Larmor frequency, set by the magnet's field: ≈8.5 MHz at 0.2 T, 64 MHz at 1.5 T, 128 MHz at 3 T (research 7 T scanners reach ~298 MHz). Any single scan's own bandwidth is just a few kHz.",
+		"source": "nasa-ems",
+		"extraSource": {
+			"title": "Wikipedia — Physics of MRI (Larmor frequency)",
+			"url": "https://en.wikipedia.org/wiki/Physics_of_magnetic_resonance_imaging"
+		}
 	},
 	{
 		"id": "tv-vhf-lo",
@@ -1079,10 +1084,11 @@
 		"name": "UV-A / blacklight",
 		"hz": 821000000000000,
 		"band": [750000000000000, 950000000000000],
-		"layer": "consumer",
+		"layer": "science",
+		"altLayer": "consumer",
 		"region": "uv",
 		"minLod": 3,
-		"note": "UV-A (315–400 nm) — the blacklight in a 365 nm torch that makes posters and tonic water glow, plus gel-nail/ink curing and most of a suntan. The everyday face of ultraviolet.",
+		"note": "UV-A (315–400 nm) — the blacklight in a 365 nm torch that makes posters and tonic water glow, plus gel-nail/ink curing and most of a suntan. The everyday face of ultraviolet, and a physical-science band in its own right.",
 		"source": "nasa-ems"
 	},
 	{

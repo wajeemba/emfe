@@ -95,6 +95,21 @@
 			{allocation.source.title}
 		{/if}
 	</div>
+
+	{#if allocation.extraSource}
+		<div class="source">
+			Also:
+			{#if allocation.extraSource.url}
+				<!-- External source URL (absolute https), not an internal SvelteKit route. -->
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a href={allocation.extraSource.url} target="_blank" rel="noreferrer noopener">
+					{allocation.extraSource.title}
+				</a>
+			{:else}
+				{allocation.extraSource.title}
+			{/if}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -196,6 +211,9 @@
 		font-family: var(--font-mono);
 		font-size: 12px;
 		color: var(--faint);
+	}
+	.source + .source {
+		margin-top: 4px;
 	}
 	.source a {
 		color: var(--layer-navigation);

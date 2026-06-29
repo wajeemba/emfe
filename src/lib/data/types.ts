@@ -54,6 +54,11 @@ export interface RawAllocation {
 	/** Inclusive [low, high] frequency span, Hz — when the entry is a range. */
 	band?: [number, number];
 	layer: LayerId;
+	/**
+	 * Optional second content layer this allocation also belongs to. It shows when *either* layer
+	 * is on; the primary `layer` wins for colour when its toggle is on (see `effectiveLayer`).
+	 */
+	altLayer?: LayerId;
 	region: RegionId;
 	/** Detail tier at which this first appears. */
 	minLod: Lod;
@@ -62,6 +67,8 @@ export interface RawAllocation {
 	note: string;
 	/** Source id (resolved to a {@link SourceRef} by the loader). */
 	source: string;
+	/** An extra, allocation-specific source surfaced only in the detail card (not the main list). */
+	extraSource?: { title: string; url?: string };
 }
 
 /** A resolved, in-memory allocation (`source` is the full {@link SourceRef}). */

@@ -283,8 +283,10 @@
 	main {
 		display: flex;
 		justify-content: center;
-		/* leave room for the fixed dock (its open body overlays; reserve for the open height) */
-		padding: 16px 28px 220px;
+		/* Horizontal padding matches the dock's 18px side margins so the number-line card and the
+		   controls card share one width and expand together on wide (2K/4K) displays. The big
+		   bottom value reserves room for the fixed dock. */
+		padding: 16px 18px 220px;
 		/* Pinch / drag anywhere over the explorer area drives the view (the dock + drawer opt out
 		   via their own handlers), so suppress the browser's own touch pan/zoom here. */
 		touch-action: none;
@@ -292,8 +294,9 @@
 
 	.card {
 		position: relative;
+		/* No max-width: the card fills the available width (minus the shared margin) just like the
+		   dock, so it uses the whole screen on large monitors. */
 		width: 100%;
-		max-width: 1280px;
 		background: var(--panel);
 		border: 1px solid var(--line);
 		border-radius: 20px;
@@ -410,13 +413,11 @@
 		}
 	}
 
-	/* Desktop / tablet with real height: float the card up into the upper-middle rather than
-	   pinning it to the very top. The dock's reserved bottom padding biases the vertical centre
-	   above the geometric middle, so the card lands around three-quarters up the viewport. */
+	/* Desktop / tablet with real height: keep the card high on the page (near the top) with a
+	   little breathing room above it. */
 	@media (min-width: 721px) and (min-height: 700px) {
 		main {
-			min-height: 100dvh;
-			align-items: center;
+			padding-top: clamp(20px, 5vh, 64px);
 		}
 	}
 

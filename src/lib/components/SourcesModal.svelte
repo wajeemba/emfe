@@ -30,6 +30,10 @@
 
 		<section>
 			<div class="eyebrow">Data sources</div>
+			<p class="lead">
+				The primary references for the whole dataset. Individual allocations may cite an additional
+				source in their detail card.
+			</p>
 			<ul>
 				{#each sources as s (s.id)}
 					<li>
@@ -172,6 +176,12 @@
 		font-size: 11.5px;
 		color: var(--faint);
 	}
+	.lead {
+		margin: 0 0 12px;
+		font-size: 12.5px;
+		line-height: 1.5;
+		color: var(--sub);
+	}
 	.credit {
 		margin: 0 0 8px;
 		font-size: 12.5px;
@@ -180,6 +190,14 @@
 	}
 	.credit:last-child {
 		margin-bottom: 0;
+	}
+	/* Credit links match the data-source links above for a consistent link style. */
+	.credit a {
+		color: var(--layer-navigation);
+		text-decoration: none;
+	}
+	.credit a:hover {
+		text-decoration: underline;
 	}
 	footer {
 		padding-top: 14px;

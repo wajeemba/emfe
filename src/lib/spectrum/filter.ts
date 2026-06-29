@@ -23,6 +23,22 @@ function licensed(a: Allocation, held: LicenseRank | undefined): boolean {
 	return licenseRank(held) >= licenseRank(a.reqLicense);
 }
 
+/** Whether either of an allocation's content layers is currently enabled. */
+function layerOn(a: Allocation, layers: Record<LayerId, boolean>): boolean {
+	return layers[a.layer] || (a.altLayer !== undefined && layers[a.altLayer]);
+}
+
+/**
+ * The layer an allocation should be *coloured* as, given which layers are on. The primary
+ * `layer` wins when its toggle is on; otherwise the `altLayer` (for dual-membership entries such
+ * as UV-A, which is both physical-science and consumer — science colour preferred when shown).
+ */
+export function effectiveLayer(a: Allocation, layers: Record<LayerId, boolean>): LayerId {
+	if (layers[a.layer]) return a.layer;
+	if (a.altLayer !== undefined && layers[a.altLayer]) return a.altLayer;
+	return a.layer;
+}
+
 /**
  * Allocations visible at the current LOD whose content layer is enabled. When a held licence
  * is given, amateur bands the class can't transmit on are also hidden (a band's `reqLicense`
@@ -35,13 +51,17 @@ export function visibleAllocations(
 	held?: LicenseRank
 ): Allocation[] {
 	return allocs.filter(
-		(a) => isVisibleAtLod(a.minLod, lod) && layers[a.layer] && licensed(a, held)
+		(a) => isVisibleAtLod(a.minLod, lod) && layerOn(a, layers) && licensed(a, held)
 	);
 }
 
-/** Count of allocations per content layer at the current LOD (ignores layer toggles). */
+/** Count of allocations per content layer at the current LOD (counts both layers of a dual entry). */
 export function layerCounts(allocs: readonly Allocation[], lod: Lod): Record<LayerId, number> {
 	const counts = Object.fromEntries(LAYERS.map((l) => [l, 0])) as Record<LayerId, number>;
-	for (const a of allocs) if (isVisibleAtLod(a.minLod, lod)) counts[a.layer]++;
+	for (const a of allocs) {
+		if (!isVisibleAtLod(a.minLod, lod)) continue;
+		counts[a.layer]++;
+		if (a.altLayer !== undefined) counts[a.altLayer]++;
+	}
 	return counts;
 }

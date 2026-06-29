@@ -52,6 +52,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		/* Match the rows' inner padding so the eyebrow lines up with the labels and the master
+		   switch lines up with the per-row switches on the right. */
+		padding: 0 8px;
 		margin-bottom: 11px;
 	}
 	.eyebrow {
@@ -68,11 +71,13 @@
 		cursor: pointer;
 		line-height: 0;
 	}
+	/* A neutral light-grey track (not tied to any one layer colour); the knob position carries
+	   the state. (The per-row switches turn their layer colour; the master stays neutral grey.) */
 	.master .switch {
 		background: var(--panelb);
 	}
 	.master.on .switch {
-		background: var(--ink);
+		background: var(--sub);
 	}
 	.master.on .knob {
 		left: 15px;

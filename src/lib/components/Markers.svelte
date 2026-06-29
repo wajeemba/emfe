@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
-	import { visibleAllocations } from '$lib/spectrum/filter';
+	import { visibleAllocations, effectiveLayer } from '$lib/spectrum/filter';
 	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
 	import type { Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
@@ -34,6 +34,26 @@
 	const bandMid = PLOT.bandY + PLOT.bandH / 2;
 	/** A real-bandwidth bar replaces the dot once the allocation's band is at least this wide. */
 	const MIN_BAR_PX = 7;
+	/** A bar at least this wide on screen can carry the licence glyph centred on it; narrower
+	 *  bands (and points) park the glyph just to their left so it never gets clipped. */
+	const ICON_FIT_PX = 17;
+
+	/**
+	 * Placement for an amateur allocation's operator-licence glyph — the only cue to which class a
+	 * band belongs to. It rides on the band when there's room, otherwise sits just to its left, so
+	 * it never disappears when an entry switches from a dot to a real-bandwidth bar.
+	 */
+	function iconOf(
+		a: Allocation | null,
+		centerX: number,
+		bar: { x0: number; w: number } | null
+	): { glyph: string; x: number; onBar: boolean } | null {
+		if (!a?.reqLicense) return null;
+		const glyph = LICENSE_ICON[a.reqLicense];
+		if (bar && bar.w >= ICON_FIT_PX) return { glyph, x: bar.x0 + bar.w / 2, onBar: true };
+		const leftEdge = bar ? bar.x0 : centerX;
+		return { glyph, x: leftEdge - 8, onBar: false };
+	}
 
 	/**
 	 * The on-screen pixel extent of an allocation's real band — or `null` when it has no band
@@ -50,7 +70,13 @@
 		return w >= MIN_BAR_PX ? { x0, x1, w } : null;
 	}
 
-	let visible = $derived(visibleAllocations(allocations, 3, layers, license));
+	// Filter to the visible set, then recolour dual-layer entries (e.g. UV-A) to whichever of their
+	// two layers is currently on — physical-science preferred — before grouping reads `.layer`.
+	let visible = $derived(
+		visibleAllocations(allocations, 3, layers, license).map((a) =>
+			a.altLayer ? { ...a, layer: effectiveLayer(a, layers) } : a
+		)
+	);
 
 	let layout = $derived(layoutSpectrum(visible, domain, width, fmtFreq, { lanes: LANE_Y.length }));
 
@@ -62,8 +88,7 @@
 			nameY: top + 11,
 			subY: top + 22,
 			lineTop: top + 28,
-			color: `var(--layer-${item.layer})`,
-			licenseIcon: item.alloc?.reqLicense ? LICENSE_ICON[item.alloc.reqLicense] : ''
+			color: `var(--layer-${item.layer})`
 		};
 	}
 
@@ -160,6 +185,9 @@
 {#each plainDots as d (d.id)}
 	{@const sel = selected === d.id}
 	{@const bar = barOf(d.alloc)}
+	<!-- Collapsed/dense dots don't carry glyphs (too cluttered); only a real-bandwidth bar does.
+	     Labelled leaves always show theirs (handled in the leaf layer). -->
+	{@const ic = bar ? iconOf(d.alloc, d.x, bar) : null}
 	<g
 		class="band-marker"
 		role="button"
@@ -192,6 +220,11 @@
 				class:sel
 			/>
 		{/if}
+		{#if ic}
+			<text x={ic.x} y={bandMid} class="license-icon" class:on-bar={ic.onBar} class:sel>
+				{ic.glyph}
+			</text>
+		{/if}
 	</g>
 {/each}
 
@@ -221,6 +254,7 @@
 	{@const item = p.item}
 	{@const sel = selected === item.id}
 	{@const bar = barOf(item.alloc)}
+	{@const ic = iconOf(item.alloc, item.x, bar)}
 	<g
 		class="marker"
 		class:selected={sel}
@@ -254,11 +288,13 @@
 			<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
 			<circle cx={item.x} cy={bandMid} r={sel ? 7 : 5} style="fill: {p.color}" class="dot" class:sel
 			></circle>
-			{#if p.licenseIcon}
-				<text x={item.x} y={bandMid} class="license-icon" class:sel>{p.licenseIcon}</text>
-			{/if}
 		{:else}
 			<circle cx={item.x} cy={bandMid} r={sel ? 6 : 4} class="pin" class:sel />
+		{/if}
+		{#if ic}
+			<text x={ic.x} y={bandMid} class="license-icon" class:on-bar={ic.onBar} class:sel>
+				{ic.glyph}
+			</text>
 		{/if}
 		<text x={item.x} y={p.nameY} text-anchor="middle" class="name" data-mk={item.id}
 			>{item.label}</text
@@ -286,7 +322,7 @@
 		outline: none;
 	}
 	.band-dot {
-		stroke: var(--panel);
+		stroke: var(--marker-stroke);
 		stroke-width: 1.5;
 		opacity: 0.85;
 	}
@@ -299,7 +335,7 @@
 		opacity: 1;
 	}
 	.band-bar {
-		stroke: var(--panel);
+		stroke: var(--marker-stroke);
 		stroke-width: 1;
 		opacity: 0.92;
 	}
@@ -313,7 +349,7 @@
 		stroke: var(--ink);
 	}
 	.leaf-bar {
-		stroke: var(--panel);
+		stroke: var(--marker-stroke);
 		stroke-width: 1.5;
 	}
 	.leaf-bar.sel {
@@ -336,7 +372,7 @@
 		stroke: var(--ink);
 	}
 	.dot {
-		stroke: var(--panel);
+		stroke: var(--marker-stroke);
 		stroke-width: 2;
 	}
 	.dot.sel {
@@ -344,7 +380,7 @@
 	}
 	.span {
 		opacity: 0.32;
-		stroke: var(--panel);
+		stroke: var(--marker-stroke);
 		stroke-width: 1;
 		cursor: zoom-in;
 		transition: opacity 0.12s;
@@ -356,16 +392,24 @@
 		stroke: var(--panelb);
 		stroke-width: 1;
 	}
-	/* Operator-license glyph, overlaid on the (purple) amateur dot. */
+	/* Operator-license glyph. On a wide enough band it rides centred on the bar (white for
+	   contrast); otherwise it parks just left of the marker in the amateur colour. */
 	.license-icon {
-		font-size: 8px;
-		fill: #fff;
+		font-size: 13px;
+		fill: var(--layer-amateur);
 		text-anchor: middle;
 		dominant-baseline: central;
 		pointer-events: none;
+		paint-order: stroke;
+		stroke: var(--marker-stroke);
+		stroke-width: 2.5px;
+	}
+	.license-icon.on-bar {
+		fill: #fff;
+		stroke: none;
 	}
 	.license-icon.sel {
-		font-size: 10px;
+		font-size: 15px;
 	}
 	.name {
 		font-family: var(--font-sans);

@@ -22,6 +22,9 @@
 				"layer": {
 					"enum": ["consumer", "amateur", "navigation", "gov", "science"]
 				},
+				"altLayer": {
+					"enum": ["consumer", "amateur", "navigation", "gov", "science"]
+				},
 				"region": {
 					"enum": ["radio", "microwave", "infrared", "visible", "uv", "xray", "gamma"]
 				},
@@ -30,7 +33,16 @@
 					"enum": ["unlicensed", "technician", "general", "extra"]
 				},
 				"note": { "type": "string", "minLength": 1 },
-				"source": { "type": "string", "minLength": 1 }
+				"source": { "type": "string", "minLength": 1 },
+				"extraSource": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["title"],
+					"properties": {
+						"title": { "type": "string", "minLength": 1 },
+						"url": { "type": "string", "minLength": 1 }
+					}
+				}
 			}
 		}
 	}
