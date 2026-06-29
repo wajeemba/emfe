@@ -60,16 +60,20 @@
 
 		<section>
 			<div class="eyebrow">Credits</div>
-			<p class="credit">Built by Exagrow Studios and Andrew SC Ahlfield.</p>
-			<p class="credit">© {copyrightYears} Exagrow Studios and Andrew SC Ahlfield</p>
+			<p class="credit">Built by Exagrow Studios &amp; Andrew SC Ahlfield · © {copyrightYears}.</p>
 			<p class="credit">
-				Code licensed under
+				Open source on
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a href="https://github.com/wajeemba/emfe" target="_blank" rel="noreferrer noopener"
+					>GitHub</a
+				>
+				— code under
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="https://www.apache.org/licenses/LICENSE-2.0"
 					target="_blank"
 					rel="noreferrer noopener">Apache&nbsp;2.0</a
-				>; allocation data under
+				>, data under
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a
 					href="https://creativecommons.org/licenses/by/4.0/"
