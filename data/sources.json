@@ -1,9 +1,9 @@
 [
 	{
 		"id": "fcc-tofa",
-		"title": "FCC Table of Frequency Allocations (47 CFR §2.106)",
-		"url": "https://www.fcc.gov/engineering-technology/policy-and-rules-division/radio-spectrum-allocation",
-		"retrieved": "2026-06-26"
+		"title": "FCC/NTIA Table of Frequency Allocations (47 CFR §2.106)",
+		"url": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-2/subpart-B/section-2.106",
+		"retrieved": "2026-06-29"
 	},
 	{
 		"id": "fcc-part97",

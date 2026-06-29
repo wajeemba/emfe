@@ -23,6 +23,73 @@ zoom out to the seven great regions; zoom in to ITU bands, then to real allocati
 
 ---
 
+## The three tiers: allocation · assignment · application
+
+The spectrum is governed at three different altitudes, and a chart that wants to be _real_ (not
+a novelty poster) has to show all three without conflating them. The federal regulation itself is
+organized this way — 47 CFR Part 2, Subpart B is literally titled _"Allocation, Assignment, and
+Use of Radio Frequencies."_ We adopt that exact framing as the product's spine:
+
+| Tier            | Question it answers                          | Example                                              | Source                              |
+| --------------- | -------------------------------------------- | ---------------------------------------------------- | ----------------------------------- |
+| **Allocation**  | What is this band legally _for_?             | 88–108 MHz → `BROADCASTING` (primary)                | FCC/NTIA Table of Allocations §2.106 |
+| **Assignment**  | Which specific frequencies are _designated_? | 121.5 MHz aircraft emergency; Marine Ch 16 distress  | FCC rule parts, channel plans       |
+| **Application** | What recognizable thing actually _uses_ it?  | FM radio, Wi-Fi, GPS, ADS-B                          | curated (the existing 134 entries)  |
+
+**Why this matters.** The chart's gaps were an artifact of only ever plotting tier 3
+(applications). The **allocation** table has no gaps — every band from 8.3 kHz to 275 GHz is
+allocated to one or more of ~30 radio services, usually several stacked (primary in CAPS,
+secondary in sentence case). Adding the allocation tier as a continuous **substrate** is what
+makes the chart honest: "empty" space becomes "allocated to FIXED/MOBILE, just nothing a
+layperson would recognize." Application-first remains the editorial voice; allocation is the
+floor it stands on.
+
+### Vertical layout (the staggering)
+
+Overlaps are everywhere, so entries stagger vertically by tier — and the tier order is
+meaningful, foundation at the bottom:
+
+```
+┌─ application markers ─────────────┐  ← top: recognizable uses (Wi-Fi, GPS) — existing markers
+│  region labels + spectrum gradient │  ← the physical reference band (rainbow at visible)
+├─ assignment lane ─────────────────┤  ← middle: specific designated frequencies / channels
+├─ allocation substrate ribbon ─────┤  ← bottom: gap-free service-category bands, on the ruler
+└─ frequency axis ──────────────────┘
+```
+
+The allocation substrate sits closest to the axis because it _is_ the ruler's legal meaning.
+Each tier has its own LOD behaviour: the substrate coarsens to broad service blocks when zoomed
+out and resolves to individual allocations when zoomed in; applications keep their group→leaf
+mechanic.
+
+### Control panel
+
+The dock makes the paradigm explicit by mirroring the three tiers left→right:
+
+1. **Application** — the existing content-layer toggles (consumer, amateur, navigation, gov,
+   science) + the amateur license filter. _Unchanged._
+2. **Allocation** — _new._ Filter the substrate by radio-service category and by
+   **Federal vs Non-Federal** (government vs civilian spectrum — a first-class axis the §2.106
+   table draws explicitly).
+3. **Assignment** — _new._ Toggle the designated-frequency lane.
+
+### Data model & sourcing
+
+- A `tier` discriminator is added to the allocation model; all existing entries default to
+  `application` (we keep "application-first" — no aggressive reclassification of curated data).
+- The **allocation substrate** is a distinct data kind (`ServiceAllocation`: `lo`, `hi`,
+  `federal`, `primary[]`, `secondary[]`, `footnotes[]`) in `data/allocations/us-table.json`.
+- Substrate data is **curated from §2.106 and verified against the FCC Online Table PDF**
+  (`transition.fcc.gov/oet/spectrum/table/fcctable.pdf`, the column-ruled table — _not_ the wall
+  poster). The eCFR API (`…/api/versioner/v1/full/{date}/title-47.xml?part=2&subpart=B`) is the
+  canonical machine-readable source for the **footnotes**; the band→service _grid_ only exists in
+  the PDF, whose 180-page multi-column / continuation-page layout defeats a clean unattended
+  parse — so the grid is authored and cited rather than scraped. A robust automated regeneration
+  is future work; correctness today comes from curation, not a fragile transform.
+- Provenance stays `fcc-tofa`, now repointed at the canonical eCFR §2.106 citation.
+
+---
+
 ## Tech Stack
 
 | Concern             | Choice                                                                                                                                                             |
