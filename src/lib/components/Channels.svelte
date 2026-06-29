@@ -44,18 +44,26 @@
 	 * when zoomed in — and correct even when channel numbers run out of frequency order (e.g. the
 	 * interleaved 15/1/16/2 walkie-talkie channels). Returns the channel numbers to label.
 	 */
-	function labelled(channels: PlacedChannel[]): string[] {
+	// Identity key — a channel number can repeat within a plan (a marine duplex channel has both a
+	// ship and a coast frequency), so we track which channels are labelled by their unique Hz.
+	function labelled(channels: PlacedChannel[]): number[] {
 		const onscreen = channels
 			.filter((c) => c.x >= 12 && c.x <= width - 12)
 			.sort((a, b) => a.x - b.x);
-		const keep: string[] = [];
-		let lastX = -Infinity;
-		for (const c of onscreen) {
-			if (c.x - lastX >= LABEL_GAP) {
-				keep.push(c.n);
-				lastX = c.x;
+		const keep: number[] = [];
+		const keptX: number[] = [];
+		const place = (list: PlacedChannel[]) => {
+			for (const c of list) {
+				if (keptX.every((x) => Math.abs(x - c.x) >= LABEL_GAP)) {
+					keep.push(c.hz);
+					keptX.push(c.x);
+				}
 			}
-		}
+		};
+		// Prefer the everyday channels; the GMRS-only repeater labels only fill the room left over,
+		// so a tight zoom shows 8–14 rather than R15–R22 on top of them.
+		place(onscreen.filter((c) => c.tag !== 'gmrs'));
+		place(onscreen.filter((c) => c.tag === 'gmrs'));
 		return keep;
 	}
 </script>
@@ -65,7 +73,7 @@
 	<!-- Service name at the start of the plan's on-screen extent. -->
 	{@const x0 = Math.max(p.channels[0].x, 2)}
 	<text x={x0} y={bandTop - 17} class="ch-service">{p.plan.service} channels</text>
-	{#each p.channels as ch (ch.n)}
+	{#each p.channels as ch (ch.hz)}
 		{#if ch.x >= -2 && ch.x <= width + 2}
 			<line
 				x1={ch.x}
@@ -75,7 +83,7 @@
 				class="ch-tick"
 				class:gmrs={ch.tag === 'gmrs'}
 			/>
-			{#if show.includes(ch.n)}
+			{#if show.includes(ch.hz)}
 				<text
 					x={ch.x}
 					y={bandTop - 8}

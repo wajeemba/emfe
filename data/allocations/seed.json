@@ -29,7 +29,7 @@
 		"layer": "gov",
 		"region": "radio",
 		"minLod": 2,
-		"note": "US Navy ELF — 76 Hz signalling that reaches submerged submarines. Counter-intuitively narrow: at ~1 bit/minute the emission occupies only a few Hz, even though the ELF band itself spans 3 Hz–3 kHz.",
+		"note": "US Navy ELF — 76 Hz signalling (now retired) that penetrated seawater to reach deeply submerged submarines. The catch is speed: a few characters per *minute*, so it could never carry a real message. It was a 'bell ringer' — a short coded alert telling a sub to come to periscope depth and receive full orders over the faster VLF link.",
 		"source": "nasa-ems"
 	},
 	{
@@ -410,22 +410,26 @@
 		"id": "lmr-vhf",
 		"name": "VHF land mobile",
 		"hz": 153000000,
-		"band": [150800000, 156250000],
+		"band": [150800000, 156000000],
 		"layer": "gov",
 		"region": "radio",
 		"minLod": 3,
-		"note": "VHF business & public-safety two-way radio — the licensed land-mobile pool (utilities, security, local government, transport) that fills the VHF high band, interleaved with MURS and just below the marine channels.",
+		"note": "VHF business & public-safety two-way radio — the licensed land-mobile pool (utilities, security, local government, transport) that fills the VHF high band, interleaved with MURS and ending right where the marine band begins at 156 MHz.",
 		"source": "fcc-tofa"
 	},
 	{
 		"id": "marine-vhf",
 		"name": "Marine VHF",
 		"hz": 157000000,
-		"band": [156000000, 162000000],
+		"band": [156000000, 162050000],
+		"segments": [
+			[156000000, 157450000],
+			[161550000, 162050000]
+		],
 		"layer": "navigation",
 		"region": "radio",
 		"minLod": 3,
-		"note": "Marine VHF — ship-to-ship & coast-guard; channel 16 (156.8 MHz) is the distress call.",
+		"note": "Marine VHF — ship-to-ship & coast-guard; channel 16 (156.8 MHz) is the distress call. The channels you tune sit at the bottom (156–157.45 MHz, the ship-transmit side). The duplex channels (mostly 24–28, 84–88) also have a coast-station transmit frequency 4.6 MHz higher, at 161.55–162.05 MHz — that's the upper cluster; the 157.45–161.55 MHz between is other VHF land-mobile, not marine.",
 		"source": "fcc-tofa"
 	},
 	{
