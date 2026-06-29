@@ -183,7 +183,7 @@
 	}
 	.admin.federal .swatch {
 		background-image: repeating-linear-gradient(
-			45deg,
+			135deg,
 			color-mix(in srgb, var(--ink) 26%, transparent) 0 1px,
 			transparent 1px 5px
 		);

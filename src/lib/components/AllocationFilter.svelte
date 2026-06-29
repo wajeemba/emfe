@@ -157,7 +157,7 @@
 	   government-spectrum cue is consistent between the control and the ribbon. */
 	.seg-btn.fed {
 		background-image: repeating-linear-gradient(
-			45deg,
+			135deg,
 			color-mix(in srgb, var(--ink) 22%, transparent) 0 1px,
 			transparent 1px 5px
 		);
