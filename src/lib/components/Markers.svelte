@@ -4,9 +4,9 @@
 	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
 	import { visibleAllocations, effectiveLayer } from '$lib/spectrum/filter';
 	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
-	import type { Allocation } from '$lib/data/types';
+	import { licenseRank, type Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
-	import { LICENSE_ICON } from '$lib/spectrum/license';
+	import { LICENSE_ICON, privilegeBands, hasPrivilegePlan } from '$lib/spectrum/license';
 	import { clampCenter, clampZoom } from '$lib/spectrum/zoom';
 	import { allocations } from '$lib/data/loader';
 	import type { LayerId, LicenseRank } from '$lib/data/types';
@@ -37,22 +37,59 @@
 	/** A bar at least this wide on screen can carry the licence glyph centred on it; narrower
 	 *  bands (and points) park the glyph just to their left so it never gets clipped. */
 	const ICON_FIT_PX = 17;
+	/** An opaque sub-band section at least this wide can seat its own class glyph, centred. */
+	const SECTION_GLYPH_PX = 13;
+
+	interface IconPlacement {
+		glyph: string;
+		x: number;
+		/** Centred on a solid section (white) vs parked to the left in the amateur colour. */
+		onBar: boolean;
+	}
 
 	/**
-	 * Placement for an amateur allocation's operator-licence glyph — the only cue to which class a
-	 * band belongs to. It rides on the band when there's room, otherwise sits just to its left, so
-	 * it never disappears when an entry switches from a dot to a real-bandwidth bar.
+	 * The operator-licence glyph(s) for an amateur allocation — the chart's cue to which class a
+	 * band belongs to. For a sub-banded band this mirrors the inspector strip: one glyph per
+	 * transmittable (opaque) sub-band, centred on it and showing *that section's* class. Plain
+	 * bands, points, and bands you can't transmit on anywhere fall back to one glyph for the band's
+	 * required class, riding the bar when there's room or parked just to its left otherwise.
 	 */
-	function iconOf(
+	function iconsOf(
 		a: Allocation | null,
 		centerX: number,
 		bar: { x0: number; w: number } | null
-	): { glyph: string; x: number; onBar: boolean } | null {
-		if (!a?.reqLicense) return null;
+	): IconPlacement[] {
+		if (!a?.reqLicense) return [];
+
+		// Sub-banded band with real width: a glyph on each opaque section, centred on it.
+		if (bar && hasPrivilegePlan(a.id)) {
+			const enabled = privilegeBands(a.id, license).filter((b) => b.enabled);
+			if (enabled.length > 0) {
+				const out: IconPlacement[] = [];
+				for (const b of enabled) {
+					const x0 = logPos(b.loHz, domain) * width;
+					const x1 = logPos(b.hiHz, domain) * width;
+					if (x1 - x0 >= SECTION_GLYPH_PX) {
+						out.push({ glyph: LICENSE_ICON[b.minLicense], x: (x0 + x1) / 2, onBar: true });
+					}
+				}
+				// Every section too narrow for its own glyph → one centred on the band as a whole.
+				return out.length > 0
+					? out
+					: [{ glyph: LICENSE_ICON[enabled[0].minLicense], x: bar.x0 + bar.w / 2, onBar: true }];
+			}
+			// else: no transmittable section — fall through to the single required-class glyph.
+		}
+
+		// Plain band / point / fully-muted band: one glyph for the band's required class. A solid
+		// (transmittable) wide bar carries it centred; everything else parks it to the left so it
+		// reads against the dark plot rather than a see-through fill.
 		const glyph = LICENSE_ICON[a.reqLicense];
-		if (bar && bar.w >= ICON_FIT_PX) return { glyph, x: bar.x0 + bar.w / 2, onBar: true };
+		if (bar && bar.w >= ICON_FIT_PX && !mutedAmateur(a)) {
+			return [{ glyph, x: bar.x0 + bar.w / 2, onBar: true }];
+		}
 		const leftEdge = bar ? bar.x0 : centerX;
-		return { glyph, x: leftEdge - 8, onBar: false };
+		return [{ glyph, x: leftEdge - 8, onBar: false }];
 	}
 
 	/**
@@ -83,10 +120,53 @@
 		});
 	}
 
+	/**
+	 * For a band with a documented sub-band privilege plan, the held licence's *accessible* runs
+	 * (adjacent sub-bands merged) in screen px, plus whether the class unlocks the whole band.
+	 * `null` for bands with no plan — those fall back to the plain single/segmented bar.
+	 *
+	 * This is what makes the band expand/contract with the licence: at a class with no privilege
+	 * the runs are empty (only the transparent envelope shows); at Extra every sub-band is unlocked
+	 * (`allEnabled`) and the band draws solid edge-to-edge.
+	 */
+	function privSegsOf(
+		a: Allocation | null
+	): { runs: { x0: number; w: number }[]; allEnabled: boolean } | null {
+		if (!a?.band || !hasPrivilegePlan(a.id)) return null;
+		const bands = privilegeBands(a.id, license);
+		const runs: { loHz: number; hiHz: number }[] = [];
+		for (const b of bands) {
+			if (!b.enabled) continue;
+			const last = runs[runs.length - 1];
+			if (last && Math.abs(b.loHz - last.hiHz) < 1) last.hiHz = b.hiHz;
+			else runs.push({ loHz: b.loHz, hiHz: b.hiHz });
+		}
+		const toPx = (loHz: number, hiHz: number) => {
+			const x0 = logPos(loHz, domain) * width;
+			return { x0, w: logPos(hiHz, domain) * width - x0 };
+		};
+		return {
+			runs: runs.map((r) => toPx(r.loHz, r.hiHz)),
+			allEnabled: bands.length > 0 && bands.every((b) => b.enabled)
+		};
+	}
+
+	/**
+	 * True when an amateur item is one the held licence can't transmit *anywhere* on — so it's
+	 * drawn translucent (you may listen, just not key up). A sub-banded band counts only when no
+	 * sub-band is unlocked; a plain amateur band when the class sits below its `reqLicense`.
+	 * Drives the see-through circle in point-source mode and the transparent envelope as a bar.
+	 */
+	function mutedAmateur(a: Allocation | null): boolean {
+		if (!a?.reqLicense) return false;
+		if (hasPrivilegePlan(a.id)) return privilegeBands(a.id, license).every((b) => !b.enabled);
+		return licenseRank(license) < licenseRank(a.reqLicense);
+	}
+
 	// Filter to the visible set, then recolour dual-layer entries (e.g. UV-A) to whichever of their
 	// two layers is currently on — physical-science preferred — before grouping reads `.layer`.
 	let visible = $derived(
-		visibleAllocations(allocations, 3, layers, license).map((a) =>
+		visibleAllocations(allocations, 3, layers).map((a) =>
 			a.altLayer ? { ...a, layer: effectiveLayer(a, layers) } : a
 		)
 	);
@@ -175,6 +255,81 @@
 	</linearGradient>
 </defs>
 
+<!-- The real-bandwidth rect(s) for one allocation, shared by the dot and labelled-leaf layers.
+     A band with a sub-band privilege plan draws a transparent full-band envelope with the held
+     class's accessible runs filled in opaque (so it expands/contracts with the licence); once the
+     class unlocks the whole band it falls through to the solid single bar. Bands without a plan
+     keep the plain behaviour: a faint connector under split `segments`, else one solid span. -->
+{#snippet bandShape(
+	alloc: Allocation,
+	bar: { x0: number; w: number },
+	color: string,
+	h: number,
+	rx: number,
+	barClass: string,
+	sel: boolean
+)}
+	{@const priv = privSegsOf(alloc)}
+	{#if priv && !priv.allEnabled}
+		<rect
+			x={bar.x0}
+			y={bandMid - h / 2}
+			width={bar.w}
+			height={h}
+			{rx}
+			style="fill: {color}"
+			class="priv-envelope"
+		/>
+		{#each priv.runs as r, ri (ri)}
+			<rect
+				x={r.x0}
+				y={bandMid - h / 2}
+				width={Math.max(r.w, 2)}
+				height={h}
+				{rx}
+				style="fill: {color}"
+				class={barClass}
+				class:sel
+			/>
+		{/each}
+	{:else if mutedAmateur(alloc)}
+		<!-- A plain amateur band the class can't transmit on: present, but see-through. -->
+		<rect
+			x={bar.x0}
+			y={bandMid - h / 2}
+			width={bar.w}
+			height={h}
+			{rx}
+			style="fill: {color}"
+			class="priv-envelope"
+		/>
+	{:else}
+		{#if alloc.segments}
+			<rect
+				x={bar.x0}
+				y={bandMid - h / 2}
+				width={bar.w}
+				height={h}
+				{rx}
+				style="fill: {color}"
+				class="seg-connector"
+			/>
+		{/if}
+		{#each segmentsOf(alloc) as s, si (si)}
+			<rect
+				x={s.x0}
+				y={bandMid - h / 2}
+				width={Math.max(s.w, 2)}
+				height={h}
+				{rx}
+				style="fill: {color}"
+				class={barClass}
+				class:sel
+			/>
+		{/each}
+	{/if}
+{/snippet}
+
 <!-- Layer 1 — neighbourhood envelopes. Kept beneath every entry so a wide transparent span
      never splits a narrow band's bar (the labelled chip in layer 3 is the real button; this
      stays a mouse target but is hidden from assistive tech to avoid a double announcement). -->
@@ -200,7 +355,7 @@
 	{@const bar = barOf(d.alloc)}
 	<!-- Collapsed/dense dots don't carry glyphs (too cluttered); only a real-bandwidth bar does.
 	     Labelled leaves always show theirs (handled in the leaf layer). -->
-	{@const ic = bar ? iconOf(d.alloc, d.x, bar) : null}
+	{@const ics = bar ? iconsOf(d.alloc, d.x, bar) : []}
 	<g
 		class="band-marker"
 		role="button"
@@ -210,31 +365,7 @@
 		onkeydown={(e) => onKey2(e, d.id)}
 	>
 		{#if bar}
-			<!-- Faint full-span connector ties split segments together as one service. -->
-			{#if d.alloc.segments}
-				<rect
-					x={bar.x0}
-					y={bandMid - 5}
-					width={bar.w}
-					height="10"
-					rx="2.5"
-					style="fill: var(--layer-{d.layer})"
-					class="seg-connector"
-				/>
-			{/if}
-			<!-- real bandwidth: one bar per occupied segment (a single span when not segmented) -->
-			{#each segmentsOf(d.alloc) as s, si (si)}
-				<rect
-					x={s.x0}
-					y={bandMid - 5}
-					width={Math.max(s.w, 2)}
-					height="10"
-					rx="2.5"
-					style="fill: var(--layer-{d.layer})"
-					class="band-bar"
-					class:sel
-				/>
-			{/each}
+			{@render bandShape(d.alloc, bar, `var(--layer-${d.layer})`, 10, 2.5, 'band-bar', sel)}
 		{:else if d.region === 'visible'}
 			<circle cx={d.x} cy={bandMid} r={sel ? 5 : 3.5} class="pin" class:sel />
 		{:else}
@@ -245,13 +376,14 @@
 				style="fill: var(--layer-{d.layer})"
 				class="band-dot"
 				class:sel
+				class:muted={mutedAmateur(d.alloc)}
 			/>
 		{/if}
-		{#if ic}
+		{#each ics as ic, ii (ii)}
 			<text x={ic.x} y={bandMid} class="license-icon" class:on-bar={ic.onBar} class:sel>
 				{ic.glyph}
 			</text>
-		{/if}
+		{/each}
 	</g>
 {/each}
 
@@ -281,7 +413,7 @@
 	{@const item = p.item}
 	{@const sel = selected === item.id}
 	{@const bar = barOf(item.alloc)}
-	{@const ic = iconOf(item.alloc, item.x, bar)}
+	{@const ics = iconsOf(item.alloc ?? null, item.x, bar)}
 	<g
 		class="marker"
 		class:selected={sel}
@@ -300,43 +432,26 @@
 			style="stroke: {sel ? p.color : 'var(--panelb)'}; stroke-width: {sel ? 2 : 1}"
 		/>
 		{#if bar}
-			<!-- Faint full-span connector ties split segments together as one service. -->
-			{#if item.alloc?.segments}
-				<rect
-					x={bar.x0}
-					y={bandMid - 6}
-					width={bar.w}
-					height="12"
-					rx="3"
-					style="fill: {p.color}"
-					class="seg-connector"
-				/>
-			{/if}
-			<!-- real-bandwidth bar(s) for the labelled leaf — one per occupied segment -->
-			{#each segmentsOf(item.alloc) as s, si (si)}
-				<rect
-					x={s.x0}
-					y={bandMid - 6}
-					width={Math.max(s.w, 2)}
-					height="12"
-					rx="3"
-					style="fill: {p.color}"
-					class="leaf-bar"
-					class:sel
-				/>
-			{/each}
+			{@render bandShape(item.alloc!, bar, p.color, 12, 3, 'leaf-bar', sel)}
 		{:else if item.alloc?.region !== 'visible'}
 			<!-- emphasised dot for the labelled leaf (sits over its band dot) -->
-			<circle cx={item.x} cy={bandMid} r={sel ? 7 : 5} style="fill: {p.color}" class="dot" class:sel
+			<circle
+				cx={item.x}
+				cy={bandMid}
+				r={sel ? 7 : 5}
+				style="fill: {p.color}"
+				class="dot"
+				class:sel
+				class:muted={mutedAmateur(item.alloc ?? null)}
 			></circle>
 		{:else}
 			<circle cx={item.x} cy={bandMid} r={sel ? 6 : 4} class="pin" class:sel />
 		{/if}
-		{#if ic}
+		{#each ics as ic, ii (ii)}
 			<text x={ic.x} y={bandMid} class="license-icon" class:on-bar={ic.onBar} class:sel>
 				{ic.glyph}
 			</text>
-		{/if}
+		{/each}
 		<text x={item.x} y={p.nameY} text-anchor="middle" class="name" data-mk={item.id}
 			>{item.label}</text
 		>
@@ -433,6 +548,20 @@
 	   two bars read as one service rather than two unrelated bands. */
 	.seg-connector {
 		opacity: 0.16;
+	}
+	/* The transparent full-band envelope for a licence-gated band: the whole allocation drawn at
+	   true width and outlined, with only the held class's accessible sub-bands filled opaque over
+	   it. At a class with no privilege here, this outline is all that shows. */
+	.priv-envelope {
+		opacity: 0.36;
+		stroke: var(--marker-stroke);
+		stroke-width: 1;
+	}
+	/* Point-source mode of a muted amateur item: the same see-through treatment as its envelope,
+	   so a band you can only listen on reads identically whether it's a dot or a bar. */
+	.band-dot.muted,
+	.dot.muted {
+		opacity: 0.36;
 	}
 	.group-line {
 		stroke: var(--panelb);

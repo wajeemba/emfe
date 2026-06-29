@@ -3,7 +3,11 @@
 
 	const sources = referencedSources();
 	const version = __APP_VERSION__;
+	// Copyright spans from first publication (2026) to the current year. Show a
+	// single year until we're past 2026, then an en-dash range (e.g. 2026–2027).
+	const startYear = 2026;
 	const year = new Date().getFullYear();
+	const copyrightYears = year > startYear ? `${startYear}–${year}` : `${startYear}`;
 	let dialog = $state<HTMLDialogElement>();
 
 	function open() {
@@ -56,7 +60,21 @@
 
 		<section>
 			<div class="eyebrow">Credits</div>
-			<p class="credit">© {year} Andrew Ahlfield</p>
+			<p class="credit">Built by Exagrow Studios and Andrew SC Ahlfield.</p>
+			<p class="credit">© {copyrightYears} Exagrow Studios and Andrew SC Ahlfield</p>
+			<p class="credit">
+				Code licensed under
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noreferrer noopener"
+					>Apache&nbsp;2.0</a
+				>; allocation data under
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a
+					href="https://creativecommons.org/licenses/by/4.0/"
+					target="_blank"
+					rel="noreferrer noopener">CC&nbsp;BY&nbsp;4.0</a
+				>.
+			</p>
 			<p class="credit">
 				Developed using Claude Code (Opus 4.8) and the
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->

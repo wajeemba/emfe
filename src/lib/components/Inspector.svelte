@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { Allocation, LicenseRank } from '$lib/data/types';
+	import { licenseRank, type Allocation, type LicenseRank } from '$lib/data/types';
 	import { REGIONS } from '$lib/spectrum/bands';
-	import { fmtFreq, fmtWavelengthOf } from '$lib/spectrum/format';
+	import { fmtFreq, fmtPhotonEv, fmtWavelengthOf } from '$lib/spectrum/format';
+	import { axisOptions } from '$lib/state/axis';
 	import {
-		eligibility,
+		LICENSE_ICON,
+		RANK_LABELS,
 		privilegeNote,
 		privilegeStrip,
-		type PrivilegeMode
+		type RenderedSegment
 	} from '$lib/spectrum/license';
 
 	let { allocation, license }: { allocation: Allocation; license: LicenseRank } = $props();
@@ -22,18 +24,40 @@
 	};
 	let learnMore = $derived(LEARN_MORE[allocation.id]);
 
-	/** Privilege-strip segment colours reuse the layer palette (≈ the prototype's mode hues). */
-	const MODE_VAR: Record<PrivilegeMode, string> = {
-		cw: '--layer-navigation',
-		data: '--layer-consumer',
-		phone: '--layer-gov'
+	/** Badge copy for the band's required class — a neutral "what licence opens this band" cue.
+	 *  License-free reads better than "Unlicensed" for the licence-free services. */
+	const REQ_LABEL: Record<LicenseRank, string> = {
+		unlicensed: 'License-free',
+		technician: 'Technician licence',
+		general: 'General licence',
+		extra: 'Amateur Extra licence'
 	};
+
+	/** Operating-mode labels, spelt out so the abbreviations explain themselves on hover. */
+	const MODE_LABEL: Record<RenderedSegment['mode'], string> = {
+		cw: 'CW (Morse code)',
+		data: 'Data (digital)',
+		phone: 'Phone (voice)'
+	};
+
+	/** A hover tooltip that keeps the mode info the pink fill no longer encodes. */
+	function segTitle(seg: RenderedSegment): string {
+		if (!allocation.band) return '';
+		const [lo, hi] = allocation.band;
+		const from = lo + seg.from * (hi - lo);
+		const to = lo + seg.to * (hi - lo);
+		return `${fmtFreq(from)} – ${fmtFreq(to)} · ${RANK_LABELS[seg.minLicense]} · ${MODE_LABEL[seg.mode]}`;
+	}
 
 	let bandText = $derived(
 		allocation.band ? `${fmtFreq(allocation.band[0])} – ${fmtFreq(allocation.band[1])}` : ''
 	);
-	let elig = $derived(eligibility(allocation.reqLicense, license));
+	let reqClass = $derived(allocation.reqLicense);
 	let segments = $derived(privilegeStrip(allocation.id, license));
+	/** Distinct licence classes present in this band, low → high, for the glyph key. */
+	let classKey = $derived(
+		[...new Set(segments.map((s) => s.minLicense))].sort((a, b) => licenseRank(a) - licenseRank(b))
+	);
 </script>
 
 <div class="inspector">
@@ -45,25 +69,29 @@
 	</div>
 
 	<div class="meta">
-		{regionLabel(allocation.region)} · λ {fmtWavelengthOf(allocation.hz)}{bandText
-			? ` · ${bandText}`
-			: ''}
+		{regionLabel(allocation.region)} · λ {fmtWavelengthOf(allocation.hz)}{$axisOptions.showEv
+			? ` · E ${fmtPhotonEv(allocation.hz)}`
+			: ''}{bandText ? ` · ${bandText}` : ''}
 	</div>
 
-	{#if elig.amateur}
-		<div class="pill" class:granted={elig.granted} class:denied={!elig.granted}>{elig.text}</div>
+	{#if reqClass}
+		<div class="class-badge">
+			<span class="badge-glyph">{LICENSE_ICON[reqClass]}</span>
+			<span>{REQ_LABEL[reqClass]}</span>
+		</div>
 	{/if}
 
 	{#if segments.length > 0 && allocation.band}
-		<div class="strip" aria-hidden="true">
+		<div class="strip">
 			{#each segments as seg, i (i)}
 				<span
 					class="seg"
 					class:off={!seg.enabled}
-					style="left: {seg.from * 100}%; width: {(seg.to - seg.from) * 100}%; --c: var({MODE_VAR[
-						seg.mode
-					]})"
-				></span>
+					style="left: {seg.from * 100}%; width: {(seg.to - seg.from) * 100}%"
+					title={segTitle(seg)}
+				>
+					<span class="seg-mark">{LICENSE_ICON[seg.minLicense]}</span>
+				</span>
 			{/each}
 		</div>
 		<div class="strip-legend">
@@ -71,6 +99,13 @@
 			<span>{privilegeNote(license)}</span>
 			<span>{fmtFreq(allocation.band[1])}</span>
 		</div>
+		{#if classKey.length > 0}
+			<div class="class-key">
+				{#each classKey as rank (rank)}
+					<span><b>{LICENSE_ICON[rank]}</b> {RANK_LABELS[rank]}</span>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 
 	<p class="note">{allocation.note}</p>
@@ -143,24 +178,36 @@
 		color: var(--sub);
 		margin: 3px 0 10px;
 	}
-	.pill {
-		display: inline-block;
+	/* Neutral "what licence opens this band" badge — the held class is shown by which sub-bands
+	   light up on the chart and in the strip, so this no longer flips green/red by privilege. */
+	.class-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
 		font-family: var(--font-sans);
 		font-size: 13.5px;
 		font-weight: 600;
-		padding: 4px 10px;
-		border-radius: 7px;
+		padding: 4px 11px 4px 5px;
+		border-radius: 999px;
 		margin-bottom: 9px;
+		color: var(--layer-amateur);
+		background: color-mix(in srgb, var(--layer-amateur) 13%, transparent);
+		border: 1px solid color-mix(in srgb, var(--layer-amateur) 33%, transparent);
 	}
-	.pill.granted {
-		background: color-mix(in srgb, var(--layer-consumer) 16%, transparent);
-		color: var(--layer-consumer);
-		border: 1px solid color-mix(in srgb, var(--layer-consumer) 33%, transparent);
-	}
-	.pill.denied {
-		background: color-mix(in srgb, #ff6b6b 14%, transparent);
-		color: #ff6b6b;
-		border: 1px solid color-mix(in srgb, #ff6b6b 33%, transparent);
+	.badge-glyph {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 19px;
+		height: 19px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		background: var(--layer-amateur);
+		color: #fff;
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-size: 11px;
+		line-height: 1;
 	}
 	.strip {
 		position: relative;
@@ -174,11 +221,29 @@
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		background: var(--c);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		background: var(--layer-amateur);
+		box-shadow: inset -1px 0 0 color-mix(in srgb, var(--bg) 55%, transparent);
+	}
+	.strip > .seg:last-child {
+		box-shadow: none;
 	}
 	.seg.off {
-		background: var(--panelb);
-		opacity: 0.4;
+		background: color-mix(in srgb, var(--layer-amateur) 20%, var(--panelb));
+	}
+	.seg-mark {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--marker-stroke);
+	}
+	.seg.off .seg-mark {
+		color: var(--faint);
+		font-weight: 600;
 	}
 	.strip-legend {
 		display: flex;
@@ -186,7 +251,19 @@
 		font-family: var(--font-mono);
 		font-size: 10.5px;
 		color: var(--faint);
+		margin-bottom: 5px;
+	}
+	.class-key {
+		display: flex;
+		gap: 12px;
+		font-family: var(--font-mono);
+		font-size: 10.5px;
+		color: var(--faint);
 		margin-bottom: 10px;
+	}
+	.class-key b {
+		color: var(--layer-amateur);
+		font-weight: 700;
 	}
 	.note {
 		margin: 0 0 10px;

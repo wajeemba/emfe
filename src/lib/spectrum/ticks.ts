@@ -12,7 +12,7 @@
  */
 
 import { logPos, niceTicks, type FreqDomain } from './scale';
-import { fmtFreq, fmtFreqTicks, fmtWavelengthOf, sciParts } from './format';
+import { fmtFreq, fmtFreqTicks, fmtPhotonEv, fmtWavelengthOf, sciParts } from './format';
 
 export interface AxisTick {
 	id: string;
@@ -27,6 +27,8 @@ export interface AxisTick {
 	mant: string;
 	sexp: number;
 	lambda: string;
+	/** Photon energy E = hν label, e.g. "2 eV" / "12.4 keV" (shown when the eV row is on). */
+	ev: string;
 }
 
 /** Below this many visible decades, use the 1-2-5 sub-decade ruler. */
@@ -63,7 +65,8 @@ export function axisTicks(domain: FreqDomain, width: number): AxisTick[] {
 					plain: labels[i],
 					mant: sci.mant,
 					sexp: sci.exp,
-					lambda: fmtWavelengthOf(hz)
+					lambda: fmtWavelengthOf(hz),
+					ev: fmtPhotonEv(hz)
 				};
 			})
 			.filter((t) => t.x >= 0 && t.x <= width);
@@ -81,7 +84,8 @@ export function axisTicks(domain: FreqDomain, width: number): AxisTick[] {
 				plain: '',
 				mant: '',
 				sexp: 0,
-				lambda: ''
+				lambda: '',
+				ev: ''
 			});
 		}
 		return out;
@@ -119,7 +123,8 @@ export function axisTicks(domain: FreqDomain, width: number): AxisTick[] {
 				plain: labeled ? fmtFreq(v) : '',
 				mant: sci.mant,
 				sexp: sci.exp,
-				lambda: labeled ? fmtWavelengthOf(v) : ''
+				lambda: labeled ? fmtWavelengthOf(v) : '',
+				ev: labeled ? fmtPhotonEv(v) : ''
 			});
 		}
 	}

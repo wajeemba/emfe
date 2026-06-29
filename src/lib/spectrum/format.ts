@@ -32,9 +32,41 @@ const LAMBDA_UNITS: ReadonlyArray<readonly [string, number]> = [
 	['fm', 1e-15]
 ];
 
+/**
+ * Photon-energy unit ladder, largest first (E = hν). Radio photons land in neV–feV; visible light
+ * near 2 eV; X-rays in keV; nuclear γ-rays in MeV and up.
+ */
+const ENERGY_UNITS: ReadonlyArray<readonly [string, number]> = [
+	['TeV', 1e12],
+	['GeV', 1e9],
+	['MeV', 1e6],
+	['keV', 1e3],
+	['eV', 1],
+	['meV', 1e-3],
+	['µeV', 1e-6],
+	['neV', 1e-9],
+	['peV', 1e-12],
+	['feV', 1e-15]
+];
+
+/** Planck's constant in eV·s, for converting a frequency to its photon energy. */
+const PLANCK_EV = 4.135667696e-15;
+
 /** Round to a tidy precision: integers ≥ 10, two decimals below. */
 function tidy(value: number): number {
 	return value >= 10 ? Math.round(value) : Number(value.toFixed(2));
+}
+
+/**
+ * Format a frequency (Hz) as its photon energy E = hν, e.g. `fmtPhotonEv(4.8e14) → "2 eV"`,
+ * `fmtPhotonEv(3e18) → "12.4 keV"`. Energies below a femto-eV degrade to scientific notation.
+ */
+export function fmtPhotonEv(hz: number): string {
+	const eV = PLANCK_EV * hz;
+	for (const [name, scale] of ENERGY_UNITS) {
+		if (eV >= scale) return `${tidy(eV / scale)} ${name}`;
+	}
+	return `${eV.toExponential(1)} eV`;
 }
 
 /**

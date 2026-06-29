@@ -10,8 +10,8 @@
 
 import { licenseRank, type LicenseRank } from '$lib/data/types';
 
-/** Short labels for the held / required class, used in the eligibility copy. */
-const RANK_LABELS: Record<LicenseRank, string> = {
+/** Full class labels, shown in the licence badge, the licence filter, and the sub-band key. */
+export const RANK_LABELS: Record<LicenseRank, string> = {
 	unlicensed: 'Unlicensed',
 	technician: 'Technician',
 	general: 'General',
@@ -19,51 +19,16 @@ const RANK_LABELS: Record<LicenseRank, string> = {
 };
 
 /**
- * A small glyph designating each operator-license class — shown in the licence filter and as
- * a badge on amateur markers. Chosen as an escalating set of simple white-on-purple shapes.
+ * A single-letter glyph per operator-licence class — U / T / G / E — shown in the licence filter,
+ * as a badge on amateur markers, and on each sub-band of the Inspector privilege strip. The class
+ * initial reads more clearly than the abstract shapes it replaced.
  */
 export const LICENSE_ICON: Record<LicenseRank, string> = {
-	unlicensed: '○',
-	technician: '▲',
-	general: '◆',
-	extra: '★'
+	unlicensed: 'U',
+	technician: 'T',
+	general: 'G',
+	extra: 'E'
 };
-
-export interface Eligibility {
-	/** True when the allocation carries an amateur license requirement at all. */
-	amateur: boolean;
-	/** True when the held license may transmit here (always true for license-free bands). */
-	granted: boolean;
-	/** Pill copy, e.g. "✓ General licence covers this band" / "✗ Requires Extra …". */
-	text: string;
-}
-
-/**
- * Eligibility of a held license for an allocation's `reqLicense`. Returns `amateur: false`
- * (empty pill) for allocations that carry no license requirement.
- */
-export function eligibility(reqLicense: LicenseRank | undefined, held: LicenseRank): Eligibility {
-	if (reqLicense === undefined) return { amateur: false, granted: false, text: '' };
-
-	const need = licenseRank(reqLicense);
-	const have = licenseRank(held);
-
-	if (need === 0) {
-		return { amateur: true, granted: true, text: '✓ License-free — anyone may transmit' };
-	}
-	if (have >= need) {
-		return {
-			amateur: true,
-			granted: true,
-			text: `✓ ${RANK_LABELS[held]} licence covers this band`
-		};
-	}
-	return {
-		amateur: true,
-		granted: false,
-		text: `✗ Requires ${RANK_LABELS[reqLicense]} (you have ${RANK_LABELS[held]})`
-	};
-}
 
 /** Operating mode of a sub-band segment; keyed to a colour by the Inspector. */
 export type PrivilegeMode = 'cw' | 'data' | 'phone';
@@ -93,7 +58,7 @@ const SUBBAND_PLANS_MHZ: Record<
 	string,
 	{ band: [number, number]; segs: [number, number, LicenseRank, PrivilegeMode][] }
 > = {
-	ham80: {
+	ham80m: {
 		band: [3.5, 4.0],
 		segs: [
 			[3.5, 3.525, 'extra', 'cw'],
@@ -102,7 +67,7 @@ const SUBBAND_PLANS_MHZ: Record<
 			[3.8, 4.0, 'general', 'phone']
 		]
 	},
-	ham40: {
+	ham40m: {
 		band: [7.0, 7.3],
 		segs: [
 			[7.0, 7.025, 'extra', 'cw'],
@@ -120,7 +85,7 @@ const SUBBAND_PLANS_MHZ: Record<
 			[14.225, 14.35, 'general', 'phone']
 		]
 	},
-	ham15: {
+	ham15m: {
 		band: [21.0, 21.45],
 		segs: [
 			[21.0, 21.025, 'extra', 'cw'],
@@ -129,7 +94,7 @@ const SUBBAND_PLANS_MHZ: Record<
 			[21.275, 21.45, 'general', 'phone']
 		]
 	},
-	ham10: {
+	ham10m: {
 		band: [28.0, 29.7],
 		segs: [
 			[28.0, 28.3, 'technician', 'data'],
@@ -166,6 +131,40 @@ export const HAM_SUBBANDS: Record<string, PrivilegeSegment[]> = Object.fromEntri
 		}
 	)
 );
+
+/** True when an allocation has a documented sub-band privilege plan — drives the chart's
+ *  licence-aware expand/contract rendering and keeps the band visible at every class. */
+export function hasPrivilegePlan(id: string): boolean {
+	return id in SUBBAND_PLANS_MHZ;
+}
+
+/** A privilege sub-band resolved to absolute Hz against a held licence. */
+export interface PrivilegeBand {
+	loHz: number;
+	hiHz: number;
+	minLicense: LicenseRank;
+	mode: PrivilegeMode;
+	/** True when the held class may transmit in this sub-band. */
+	enabled: boolean;
+}
+
+/**
+ * A band's privilege sub-bands in absolute Hz, each flagged for the held licence — the data the
+ * main chart draws as the band at true width: a transparent envelope with the held class's
+ * accessible sub-bands filled in. Empty for bands without a documented plan.
+ */
+export function privilegeBands(id: string, held: LicenseRank): PrivilegeBand[] {
+	const plan = SUBBAND_PLANS_MHZ[id];
+	if (!plan) return [];
+	const have = licenseRank(held);
+	return plan.segs.map(([fromMHz, toMHz, minLicense, mode]) => ({
+		loHz: fromMHz * 1e6,
+		hiHz: toMHz * 1e6,
+		minLicense,
+		mode,
+		enabled: have >= licenseRank(minLicense)
+	}));
+}
 
 /** A privilege segment resolved against a held license. */
 export interface RenderedSegment extends PrivilegeSegment {

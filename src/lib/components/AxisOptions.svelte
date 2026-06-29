@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { axisOptions, toggleExp, toggleLambda } from '$lib/state/axis';
+	import { axisOptions, toggleExp, toggleLambda, toggleEv } from '$lib/state/axis';
 </script>
 
 <div class="eyebrow">Axis &amp; scale</div>
@@ -26,6 +26,17 @@
 	>
 		<span class="box" aria-hidden="true">{$axisOptions.showExp ? '✓' : ''}</span>
 		<span class="label">Scientific notation (10ⁿ)</span>
+	</button>
+	<button
+		type="button"
+		class="row"
+		class:on={$axisOptions.showEv}
+		role="switch"
+		aria-checked={$axisOptions.showEv}
+		onclick={toggleEv}
+	>
+		<span class="box" aria-hidden="true">{$axisOptions.showEv ? '✓' : ''}</span>
+		<span class="label">Photon energy E (eV)</span>
 	</button>
 </div>
 

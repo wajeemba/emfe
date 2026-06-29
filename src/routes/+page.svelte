@@ -120,7 +120,8 @@
 				<div>
 					<h1>The Electromagnetic Spectrum</h1>
 					<p class="sub">
-						Everything we broadcast, navigate by, and see — on one continuous scale.
+						Everything we broadcast, navigate by, and see — on one continuous scale. Allocations and
+						licences shown for the U.S. (FCC).
 					</p>
 				</div>
 				<div class="readout">
@@ -158,12 +159,13 @@
 							license={$license}
 						/>
 						<RegionLabels {width} domain={$visibleDomain} />
-						<Channels {width} domain={$visibleDomain} layers={$layers} license={$license} />
+						<Channels {width} domain={$visibleDomain} layers={$layers} />
 						<Axis
 							{width}
 							domain={$visibleDomain}
 							showExp={$axisOptions.showExp}
 							showLambda={$axisOptions.showLambda}
+							showEv={$axisOptions.showEv}
 						/>
 					</svg>
 				{/if}

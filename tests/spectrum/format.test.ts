@@ -4,9 +4,24 @@ import {
 	fmtFreq,
 	fmtFreqTicks,
 	fmtLambda,
+	fmtPhotonEv,
 	fmtWavelengthOf,
 	toSuperscript
 } from '$lib/spectrum/format';
+
+describe('fmtPhotonEv', () => {
+	it('puts visible light near a couple of eV', () => {
+		expect(fmtPhotonEv(5.39e14)).toBe('2.23 eV'); // 532 nm green
+	});
+	it('climbs to keV for X-rays and MeV for γ-rays', () => {
+		expect(fmtPhotonEv(3e18)).toBe('12 keV'); // medical X-ray (tidy rounds ≥10 to whole units)
+		expect(fmtPhotonEv(1.23e20)).toBe('509 keV'); // ~PET 511 keV line
+		expect(fmtPhotonEv(2.42e23)).toBe('1 GeV');
+	});
+	it('drops to sub-eV units for radio photons', () => {
+		expect(fmtPhotonEv(1e8)).toBe('414 neV'); // ~100 MHz FM
+	});
+});
 
 describe('fmtFreqTicks', () => {
 	it('shows enough decimals to distinguish neighbouring ticks', () => {

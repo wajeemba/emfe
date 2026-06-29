@@ -35,7 +35,15 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 	let current = params;
 	const localX = (clientX: number) => clientX - node.getBoundingClientRect().left;
 
+	// Gestures that start on the controls dock or the inspector drawer are left alone, so those
+	// panels keep their own scrolling; everything else — the plot and the page around it — is fair
+	// game for zoom/pan.
+	const IGNORE_SELECTOR = '.dock, .drawer, .backdrop';
+	const startedInPanel = (target: EventTarget | null) =>
+		target instanceof Element && target.closest(IGNORE_SELECTOR) !== null;
+
 	function onWheel(event: WheelEvent) {
+		if (startedInPanel(event.target)) return; // a panel scrolls itself
 		const width = current.width();
 		if (width <= 0) return;
 		event.preventDefault();
@@ -54,12 +62,8 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 
 	// ── Touch / pen: one-finger pan, two-finger pinch — anywhere on screen ────────────────
 	// Listening on `window` (not just the plot) means pinch/pan work wherever the user touches:
-	// there's usually only one thing to zoom. Touches that start on the controls dock or the
-	// inspector drawer are left alone, so those panels handle their own gestures and a
-	// two-finger gesture split across a panel and the band resolves each side independently.
-	const IGNORE_SELECTOR = '.dock, .drawer, .backdrop';
-	const startedInPanel = (target: EventTarget | null) =>
-		target instanceof Element && target.closest(IGNORE_SELECTOR) !== null;
+	// there's usually only one thing to zoom. A two-finger gesture split across a panel and the
+	// band resolves each side independently (see `startedInPanel` above).
 
 	// Track active non-mouse pointers by their x position; mouse stays on the wheel path.
 	const pointers = new Map<number, number>();
@@ -145,10 +149,11 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 		if (handled) event.preventDefault();
 	}
 
-	// Non-passive so we can preventDefault the page scroll/gesture while interacting.
-	// Wheel + keyboard stay on the plot (so the page still scrolls elsewhere, and the SVG is the
-	// focusable widget); touch gestures listen on the window so pinch/pan work anywhere.
-	node.addEventListener('wheel', onWheel, { passive: false });
+	// Non-passive so we can preventDefault the page scroll/gesture while interacting. Wheel and
+	// touch gestures listen on the window so scroll-to-zoom and pinch/pan work anywhere on the page
+	// (the `startedInPanel` guard hands scroll back to the dock/drawer). Keyboard stays on the plot
+	// — it's the focusable widget, and arrows should only steer the view once it's focused.
+	window.addEventListener('wheel', onWheel, { passive: false });
 	node.addEventListener('keydown', onKeyDown);
 	window.addEventListener('pointerdown', onPointerDown);
 	window.addEventListener('pointermove', onPointerMove, { passive: false });
@@ -160,7 +165,7 @@ export function zoomable(node: SVGElement, params: ZoomableParams) {
 			current = next;
 		},
 		destroy() {
-			node.removeEventListener('wheel', onWheel);
+			window.removeEventListener('wheel', onWheel);
 			node.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('pointerdown', onPointerDown);
 			window.removeEventListener('pointermove', onPointerMove);

@@ -5,30 +5,26 @@
 	import { CHANNEL_PLANS, placeChannels, type PlacedChannel } from '$lib/spectrum/channels';
 	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { allocations } from '$lib/data/loader';
-	import type { LayerId, LicenseRank } from '$lib/data/types';
+	import type { LayerId } from '$lib/data/types';
 	import { PLOT } from './plot-layout';
 
 	let {
 		width,
 		domain,
-		layers,
-		license
+		layers
 	}: {
 		width: number;
 		domain: FreqDomain;
 		layers: Record<LayerId, boolean>;
-		license: LicenseRank;
 	} = $props();
 
 	const bandTop = PLOT.bandY;
 	/** Minimum gap (px) between two printed channel numbers — keeps labels from overlapping. */
 	const LABEL_GAP = 16;
 
-	// Channels follow their allocation's visibility: only show for an allocation whose content
-	// layer is on and (for amateur bands) the held licence permits — same rule as the markers.
-	let visibleIds = $derived(
-		new Set(visibleAllocations(allocations, 3, layers, license).map((a) => a.id))
-	);
+	// Channels follow their allocation's visibility: shown once the content layer is on — the same
+	// rule as the markers. (Channelised services are licence-free, so the licence never gates them.)
+	let visibleIds = $derived(new Set(visibleAllocations(allocations, 3, layers).map((a) => a.id)));
 
 	// Reveal a plan's channels only once it spans a comfortable slice of the screen — they emerge
 	// as a genuine deeper tier rather than cluttering the low-zoom view.

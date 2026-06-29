@@ -10,11 +10,14 @@ export interface AxisOptions {
 	showExp: boolean;
 	/** Show a wavelength (λ, metres) row beneath the frequency ticks. */
 	showLambda: boolean;
+	/** Show a photon-energy (E = hν, in eV) row beneath the frequency ticks. */
+	showEv: boolean;
 }
 
 export const axisOptions = writable<AxisOptions>({
 	showExp: false,
-	showLambda: true
+	showLambda: true,
+	showEv: false
 });
 
 /** Toggle scientific-notation labels. */
@@ -25,4 +28,9 @@ export function toggleExp(): void {
 /** Toggle the wavelength row. */
 export function toggleLambda(): void {
 	axisOptions.update((o) => ({ ...o, showLambda: !o.showLambda }));
+}
+
+/** Toggle the photon-energy (eV) row. */
+export function toggleEv(): void {
+	axisOptions.update((o) => ({ ...o, showEv: !o.showEv }));
 }

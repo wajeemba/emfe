@@ -57,23 +57,26 @@ describe('visibleAllocations', () => {
 		expect(got.every((a) => a.layer !== 'science')).toBe(true);
 	});
 
-	it('hides amateur bands the held licence class cannot transmit on', () => {
-		const all = visibleAllocations(allocations, 3, allLayersOn); // no licence filter
-		const extra = visibleAllocations(allocations, 3, allLayersOn, 'extra');
-		const unlicensed = visibleAllocations(allocations, 3, allLayersOn, 'unlicensed');
-
-		// Extra holds every privilege → no amateur band is hidden.
-		expect(extra).toHaveLength(all.length);
-
-		// Unlicensed keeps only the licence-free amateur entries; the rest are hidden.
-		expect(unlicensed.length).toBeLessThan(all.length);
-		expect(unlicensed.every((a) => a.layer !== 'amateur' || a.reqLicense === 'unlicensed')).toBe(
-			true
+	it('never removes amateur bands — the held licence only mutes them in the markers', () => {
+		// The licence is no longer a filter input at all: hiding an amateur item you can't transmit
+		// on would lose the "you may still listen here" story, so muting is left to rendering.
+		const onlyAmateur = {
+			consumer: false,
+			amateur: true,
+			navigation: false,
+			gov: false,
+			science: false
+		};
+		const got = visibleAllocations(allocations, 3, onlyAmateur);
+		const amateurAtLod = allocationsAtLod(allocations, 3).filter(
+			(a) => a.layer === 'amateur' || a.altLayer === 'amateur'
 		);
-
-		// Non-amateur allocations are never affected by the licence.
-		const nonAmateur = all.filter((a) => a.layer !== 'amateur').length;
-		expect(unlicensed.filter((a) => a.layer !== 'amateur')).toHaveLength(nonAmateur);
+		// Every amateur band at this LOD is present regardless of any licence class.
+		expect(got.filter((a) => a.layer === 'amateur').length).toBe(
+			amateurAtLod.filter((a) => a.layer === 'amateur').length
+		);
+		expect(got.some((a) => a.id === 'ham20')).toBe(true); // sub-banded
+		expect(got.some((a) => a.id === 'ham17m')).toBe(true); // plain, General-only
 	});
 });
 

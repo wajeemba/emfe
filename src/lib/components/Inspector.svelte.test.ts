@@ -17,7 +17,7 @@ const ham20: Allocation = {
 	source: { id: 'fcc-tofa', title: 'FCC Table of Frequency Allocations' }
 };
 
-/** Wi-Fi — a consumer band with no license requirement (no eligibility pill). */
+/** Wi-Fi — a consumer band with no license requirement (no licence badge). */
 const wifi: Allocation = {
 	id: 'wifi',
 	name: 'Wi-Fi 2.4 GHz',
@@ -32,25 +32,26 @@ const wifi: Allocation = {
 const mount = (allocation: Allocation, license: LicenseRank) =>
 	render(Inspector, { props: { allocation, license } });
 
-describe('Inspector eligibility pill', () => {
-	it('grants a band the held licence covers', async () => {
-		const screen = mount(ham20, 'general');
-		await expect
-			.element(screen.getByText('✓ General licence covers this band'))
-			.toBeInTheDocument();
-	});
-
-	it('denies a band above the held class, naming what is required', async () => {
+describe('Inspector licence badge', () => {
+	it('names the class that opens the band when the held licence falls short', async () => {
+		// 20 m requires General; the badge stays neutral even for a Technician who can't use it.
 		const screen = mount(ham20, 'technician');
-		await expect
-			.element(screen.getByText('✗ Requires General (you have Technician)'))
-			.toBeInTheDocument();
+		const badge = screen.container.querySelector('.class-badge');
+		expect(badge?.textContent).toContain('General licence');
+		expect(badge?.querySelector('.badge-glyph')?.textContent).toBe('G');
 	});
 
-	it('shows no eligibility pill for a band with no licence requirement', async () => {
+	it('keeps the same neutral badge when the held licence covers the band', async () => {
+		const screen = mount(ham20, 'extra');
+		const badge = screen.container.querySelector('.class-badge');
+		expect(badge?.textContent).toContain('General licence');
+		expect(badge?.querySelector('.badge-glyph')?.textContent).toBe('G');
+	});
+
+	it('shows no licence badge for a band with no licence requirement', async () => {
 		const screen = mount(wifi, 'general');
 		await expect.element(screen.getByText('Wi-Fi 2.4 GHz')).toBeInTheDocument();
-		expect(screen.container.querySelector('.pill')).toBeNull();
+		expect(screen.container.querySelector('.class-badge')).toBeNull();
 	});
 });
 

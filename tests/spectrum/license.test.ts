@@ -1,42 +1,47 @@
 import { describe, it, expect } from 'vitest';
-import { eligibility, privilegeNote, privilegeStrip, HAM_SUBBANDS } from '$lib/spectrum/license';
-import { LICENSE_RANKS, type LicenseRank } from '$lib/data/types';
+import {
+	hasPrivilegePlan,
+	privilegeBands,
+	privilegeNote,
+	privilegeStrip,
+	HAM_SUBBANDS
+} from '$lib/spectrum/license';
 
-describe('eligibility', () => {
-	it('reports no requirement for allocations without reqLicense', () => {
-		const e = eligibility(undefined, 'general');
-		expect(e).toEqual({ amateur: false, granted: false, text: '' });
-	});
-
-	it('grants license-free bands to everyone, including the unlicensed', () => {
-		for (const held of LICENSE_RANKS) {
-			const e = eligibility('unlicensed', held);
-			expect(e.amateur).toBe(true);
-			expect(e.granted).toBe(true);
-			expect(e.text).toBe('✓ License-free — anyone may transmit');
+describe('hasPrivilegePlan', () => {
+	it('is true for the classic HF bands with a documented sub-band plan', () => {
+		for (const id of ['ham80m', 'ham40m', 'ham20', 'ham15m', 'ham10m']) {
+			expect(hasPrivilegePlan(id)).toBe(true);
 		}
 	});
 
-	// Full rank × requirement matrix for the licensed tiers.
-	const licensed: LicenseRank[] = ['technician', 'general', 'extra'];
-	for (const required of licensed) {
-		for (const held of LICENSE_RANKS) {
-			const covers = LICENSE_RANKS.indexOf(held) >= LICENSE_RANKS.indexOf(required);
-			it(`${held} vs ${required} → ${covers ? 'granted' : 'denied'}`, () => {
-				const e = eligibility(required, held);
-				expect(e.amateur).toBe(true);
-				expect(e.granted).toBe(covers);
-				expect(e.text.startsWith(covers ? '✓' : '✗')).toBe(true);
-			});
-		}
-	}
+	it('is false for bands without a plan', () => {
+		expect(hasPrivilegePlan('ham17m')).toBe(false);
+		expect(hasPrivilegePlan('wifi')).toBe(false);
+		expect(hasPrivilegePlan('does-not-exist')).toBe(false);
+	});
+});
 
-	it('names the required and held class when denied', () => {
-		expect(eligibility('extra', 'general').text).toBe('✗ Requires Extra (you have General)');
+describe('privilegeBands', () => {
+	it('is empty for bands without a documented plan', () => {
+		expect(privilegeBands('ham17m', 'extra')).toEqual([]);
+		expect(privilegeBands('does-not-exist', 'extra')).toEqual([]);
 	});
 
-	it('names the held class when granted above the floor', () => {
-		expect(eligibility('general', 'extra').text).toBe('✓ Extra licence covers this band');
+	it('resolves sub-bands to absolute Hz spanning the whole 20 m band', () => {
+		const bands = privilegeBands('ham20', 'extra');
+		expect(bands[0].loHz).toBe(14e6);
+		expect(bands[bands.length - 1].hiHz).toBe(14.35e6);
+	});
+
+	it('enables every sub-band for an Extra holder, none for a Technician on 20 m', () => {
+		expect(privilegeBands('ham20', 'extra').every((b) => b.enabled)).toBe(true);
+		expect(privilegeBands('ham20', 'technician').some((b) => b.enabled)).toBe(false);
+	});
+
+	it('enables only the non-Extra sub-bands for a General holder on 20 m', () => {
+		for (const b of privilegeBands('ham20', 'general')) {
+			expect(b.enabled).toBe(b.minLicense !== 'extra');
+		}
 	});
 });
 
@@ -75,14 +80,14 @@ describe('privilegeStrip', () => {
 	});
 
 	it('grants a Technician only the CW window on 80 m', () => {
-		const strip = privilegeStrip('ham80', 'technician');
+		const strip = privilegeStrip('ham80m', 'technician');
 		const enabled = strip.filter((s) => s.enabled);
 		expect(enabled).toHaveLength(1);
 		expect(enabled[0].mode).toBe('cw');
 	});
 
 	it('covers the classic HF bands with sub-band plans', () => {
-		for (const id of ['ham80', 'ham40', 'ham20', 'ham15', 'ham10']) {
+		for (const id of ['ham80m', 'ham40m', 'ham20', 'ham15m', 'ham10m']) {
 			expect(HAM_SUBBANDS[id]?.length).toBeGreaterThan(0);
 		}
 	});
