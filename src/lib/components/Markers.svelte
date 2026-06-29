@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
-	import { visibleAllocations, effectiveLayer } from '$lib/spectrum/filter';
+	import { visibleAllocations } from '$lib/spectrum/filter';
 	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
 	import { licenseRank, type Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
@@ -193,15 +193,16 @@
 	}
 
 	// Filter to the visible set (application tier only — assignments ride the middle lane and the
-	// substrate is the bottom tier), then recolour dual-layer entries (e.g. UV-A) to whichever of
-	// their two layers is currently on — physical-science preferred — before grouping reads `.layer`.
+	// substrate is the bottom tier). A dual-layer entry (e.g. IR heat or a laser, science + consumer)
+	// keeps its *own* identity colour — its primary layer, or its sampled spectral colour for an
+	// emitter — even when it's the alt (consumer) layer that's currently showing it. Dual-licensing
+	// governs visibility, not colour.
 	let visible = $derived(
 		visibleAllocations(allocations, 3, layers)
 			.filter((a) => a.tier !== 'assignment')
 			// Visible-light sub-filter: hide an optical entry whose group (laser/LED/gas/firework)
 			// is toggled off. Entries without an `optical` group are unaffected.
 			.filter((a) => !a.optical || $visibleGroups[a.optical])
-			.map((a) => (a.altLayer ? { ...a, layer: effectiveLayer(a, layers) } : a))
 	);
 
 	let layout = $derived(layoutSpectrum(visible, domain, width, fmtFreq, { lanes: LANE_Y.length }));
