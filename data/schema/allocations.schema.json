@@ -38,6 +38,9 @@
 				"region": {
 					"enum": ["radio", "microwave", "infrared", "visible", "uv", "xray", "gamma"]
 				},
+				"tier": {
+					"enum": ["allocation", "assignment", "application"]
+				},
 				"minLod": { "type": "integer", "minimum": 0, "maximum": 3 },
 				"reqLicense": {
 					"enum": ["unlicensed", "technician", "general", "extra"]

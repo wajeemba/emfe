@@ -48,6 +48,21 @@
 	--layer-gov: #ff9a3d;
 	--layer-science: #46d160;
 
+	/* Radio-service palette for the allocation substrate (the bottom tier). Muted on purpose:
+	   it's the floor the recognizable-application markers stand on, so it must read as
+	   background, not foreground. One hue per service category (see spectrum/services.ts). */
+	--svc-fixed: #6b7a99;
+	--svc-mobile: #2fb3a0;
+	--svc-broadcasting: #e8557e;
+	--svc-amateur: #c44cf0;
+	--svc-aeronautical: #38a8ff;
+	--svc-maritime: #3f63cc;
+	--svc-radionavigation: #8b86ff;
+	--svc-radiolocation: #ff9a3d;
+	--svc-satellite: #b66ad8;
+	--svc-science: #25c2cc;
+	--svc-other: #7e8794;
+
 	/* Typography. Self-hosted via @fontsource-variable (see +layout.svelte).
 	   The "Variable" suffix is the family name the variable @font-face registers. */
 	--font-sans: 'Hanken Grotesk Variable', system-ui, sans-serif;
@@ -89,6 +104,19 @@ html[data-theme='light'] {
 	--layer-navigation: #2f7af0;
 	--layer-gov: #d77d18;
 	--layer-science: #1fa84a;
+
+	/* Radio-service palette, deepened for the warm paper surface. */
+	--svc-fixed: #586781;
+	--svc-mobile: #0f998a;
+	--svc-broadcasting: #d6406a;
+	--svc-amateur: #b93fe0;
+	--svc-aeronautical: #2f7af0;
+	--svc-maritime: #3450b0;
+	--svc-radionavigation: #6f68e6;
+	--svc-radiolocation: #d77d18;
+	--svc-satellite: #9d4cc4;
+	--svc-science: #0e9aa6;
+	--svc-other: #6a7280;
 }
 
 * {

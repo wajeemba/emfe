@@ -12,6 +12,15 @@ import type { Lod } from '$lib/spectrum/lod';
 export const LAYERS = ['consumer', 'amateur', 'navigation', 'gov', 'science'] as const;
 export type LayerId = (typeof LAYERS)[number];
 
+/**
+ * The three governance tiers (SPEC §The three tiers). `application` = a recognizable use
+ * (Wi-Fi, GPS); `assignment` = a specifically designated frequency/channel (Marine Ch 16,
+ * 121.5 MHz emergency). The `allocation` substrate is a separate data kind ({@link ServiceAllocation}),
+ * not a marker, so markers are only ever `application` or `assignment`.
+ */
+export const TIERS = ['allocation', 'assignment', 'application'] as const;
+export type Tier = (typeof TIERS)[number];
+
 /** The seven great spectrum regions, low → high frequency. */
 export const REGIONS = [
 	'radio',
@@ -66,6 +75,12 @@ export interface RawAllocation {
 	 */
 	altLayer?: LayerId;
 	region: RegionId;
+	/**
+	 * Governance tier (SPEC §The three tiers). Omitted ⇒ `application` (the historical default —
+	 * the original 134 entries are all recognizable uses). `assignment` marks a specifically
+	 * designated frequency/channel. Determines which vertical lane the marker rides in.
+	 */
+	tier?: Tier;
 	/** Detail tier at which this first appears. */
 	minLod: Lod;
 	/** Amateur license required to transmit, when applicable. */
@@ -80,4 +95,41 @@ export interface RawAllocation {
 /** A resolved, in-memory allocation (`source` is the full {@link SourceRef}). */
 export interface Allocation extends Omit<RawAllocation, 'source'> {
 	source: SourceRef;
+}
+
+// ── Allocation substrate (the bottom tier) ───────────────────────────────────────────────────
+
+/**
+ * One band of the US Table of Frequency Allocations (47 CFR §2.106) — the `allocation` tier.
+ * Unlike a marker (a point/use), this is a contiguous span tagged with the **radio services**
+ * it's allocated to. `primary` services are ALL-CAPS in the table (protected); `secondary` are
+ * sentence-case (must not interfere with primary). `federal` distinguishes the Federal Table
+ * (government) from the Non-Federal Table (FCC / civilian) — a first-class filter axis.
+ *
+ * These tile the spectrum without gaps, which is the whole point: there is no "empty" radio
+ * spectrum, only spectrum whose allocation a layperson wouldn't recognize.
+ */
+export interface ServiceAllocation {
+	/** Inclusive low / exclusive high edge, Hz. */
+	lo: number;
+	hi: number;
+	/** Federal Table (true) vs Non-Federal / FCC Table (false). */
+	federal: boolean;
+	/** Primary (protected) services — ALL-CAPS in §2.106, e.g. `FIXED`, `BROADCASTING`. */
+	primary: string[];
+	/** Secondary services — sentence-case in §2.106. */
+	secondary?: string[];
+	/** §2.106 footnote refs that bear on this band (e.g. `US340`, `5.150`, `NG2`). */
+	footnotes?: string[];
+	/** Optional editorial gloss surfaced in the inspector. */
+	note?: string;
+}
+
+/** The curated substrate file (`data/allocation-table/us-table.json`). */
+export interface SubstrateData {
+	/** Source id, resolved against the registry (always `fcc-tofa`). */
+	source: string;
+	/** §2.106 revision the bands were curated from (ISO date). */
+	revision: string;
+	bands: ServiceAllocation[];
 }
