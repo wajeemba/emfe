@@ -21,6 +21,9 @@
 	/* Outline that separates a coloured marker from the band it sits on. Dark in both themes
 	   (a near-black hairline reads as a clean edge on the bright gradient). */
 	--marker-stroke: #14161c;
+	/* Neighbourhood grouping brace — a neutral annotation tone, not a content-layer colour: white
+	   on the dark surface (overridden to a quiet ink for light mode below). */
+	--brace: #f3f5fa;
 
 	/* Region palette (zoomed-out spectrum regions). */
 	--region-radio: #ff5470;
@@ -125,6 +128,9 @@ html[data-theme='light'] {
 
 	--emit-white: #fcfcfc;
 	--ionizing: #c98a16;
+
+	/* Grouping brace: a quiet slate ink on warm paper (the dark-mode white would vanish). */
+	--brace: #6b7180;
 }
 
 * {

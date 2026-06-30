@@ -299,7 +299,8 @@
 			right: 0;
 			width: auto;
 			height: auto;
-			max-height: 80dvh;
+			/* Rise only to just under the spectrum card (see InspectorDrawer); taller content scrolls. */
+			max-height: min(80dvh, calc(100dvh - var(--card-bottom, 20dvh) - 14px));
 			border-radius: 18px 18px 0 0;
 			box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.3);
 			transform: translateY(102%);

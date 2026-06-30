@@ -1531,6 +1531,7 @@
 		"hz": 1e23,
 		"band": [10000000000000000000, 1e27],
 		"layer": "science",
+		"altLayer": "consumer",
 		"region": "gamma",
 		"minLod": 2,
 		"note": "High-energy cosmic γ-rays (~400 MeV) — light from pulsars, blazars and supernova remnants.",

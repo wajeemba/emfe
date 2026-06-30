@@ -35,6 +35,33 @@
 	const LANE_Y = [6, 33, 60];
 	/** Callout dots sit on the vertical centre line of the coloured band. */
 	const bandMid = PLOT.bandY + PLOT.bandH / 2;
+	/** A neighbourhood (collapsed family) is annotated by a curly brace floating in the gap above the
+	 *  band — never touching it — rather than a translucent bar laid over the gradient. That leaves
+	 *  the gradient and the member dots uncovered, so the brace reads as a grouping annotation, not
+	 *  another data bar. The brace's arms (its lowest points) clear the band by {@link GROUP_BRACE_GAP}
+	 *  px; its centre nub points up to the chip's connector. */
+	const GROUP_BRACE_GAP = 7;
+	/** y of the brace arms (its widest, lowest line); the nub rises {@link GROUP_BRACE_DEPTH} above. */
+	const GROUP_BRACE_Y = PLOT.bandY - GROUP_BRACE_GAP;
+	/** How far the brace's centre nub projects up from the arms toward the label. */
+	const GROUP_BRACE_DEPTH = 7;
+
+	/**
+	 * SVG path for a horizontal curly brace from x=`lo` to x=`hi` along y=`y`, with the centre nub
+	 * projecting `depth` px upward. The two end-curls and the centre cusp scale with `depth`, so a
+	 * wide family reads as a long, gently-curled brace and a tight one as a compact one. (Canonical
+	 * two-arc curly-brace construction; the nub is centred.)
+	 */
+	function curlyBrace(lo: number, hi: number, y: number, depth: number): string {
+		const len = hi - lo || 1;
+		const cx = (lo + hi) / 2;
+		const mid = y - depth / 2; // control level for the half-arcs
+		const ny = y - depth; // nub tip (points up toward the label)
+		return (
+			`M${lo} ${y} Q${lo} ${mid} ${lo + 0.25 * len} ${mid} T${cx} ${ny} ` +
+			`M${hi} ${y} Q${hi} ${mid} ${hi - 0.25 * len} ${mid} T${cx} ${ny}`
+		);
+	}
 	/** A real-bandwidth bar replaces the dot once the allocation's band is at least this wide. */
 	const MIN_BAR_PX = 7;
 	/** A bar at least this wide on screen can carry the licence glyph centred on it; narrower
@@ -474,22 +501,28 @@
 	{/if}
 {/snippet}
 
-<!-- Layer 1 — neighbourhood envelopes. Kept beneath every entry so a wide transparent span
-     never splits a narrow band's bar (the labelled chip in layer 3 is the real button; this
-     stays a mouse target but is hidden from assistive tech to avoid a double announcement). -->
+<!-- Layer 1 — neighbourhood braces. A curly brace floating above the band marks the family's extent
+     without covering the gradient or its member dots (the labelled chip in layer 3 is the real
+     button; this stays a mouse target but is hidden from assistive tech to avoid a double
+     announcement). -->
 {#each groupItems as p (p.item.id)}
 	{@const item = p.item}
-	<rect
-		x={item.loX}
-		y={bandMid - 7}
-		width={Math.max(item.hiX - item.loX, 2)}
-		height="14"
-		rx="4"
-		style="fill: {p.color}"
-		class="span"
-		aria-hidden="true"
-		onclick={() => activate(item)}
-	/>
+	{@const lo = Math.max(item.loX, 2)}
+	{@const hi = Math.min(item.hiX, width - 2)}
+	<g class="group-bracket" aria-hidden="true" onclick={() => activate(item)}>
+		<!-- Transparent hit target spanning the brace down to the band, for the zoom-in affordance. -->
+		<rect
+			x={lo}
+			y={GROUP_BRACE_Y - GROUP_BRACE_DEPTH - 2}
+			width={Math.max(hi - lo, 2)}
+			height={PLOT.bandY - GROUP_BRACE_Y + GROUP_BRACE_DEPTH + 2}
+			class="bracket-hit"
+		/>
+		<path
+			d={curlyBrace(lo, hi, GROUP_BRACE_Y, GROUP_BRACE_DEPTH)}
+			class="bracket"
+		/>
+	</g>
 {/each}
 
 <!-- Layer 2 — data dots/bars: every visible allocation not already drawn as a label, clickable
@@ -544,7 +577,13 @@
 		onclick={() => activate(item)}
 		onkeydown={(e) => onKey(e, item)}
 	>
-		<line x1={item.x} y1={p.lineTop} x2={item.x} y2={bandMid - 7} class="line group-line" />
+		<line
+			x1={item.x}
+			y1={p.lineTop}
+			x2={item.x}
+			y2={GROUP_BRACE_Y - GROUP_BRACE_DEPTH}
+			class="line group-line"
+		/>
 		<text x={item.x} y={p.nameY} text-anchor="middle" class="name" data-mk={item.id}
 			>{item.label}</text
 		>
@@ -722,15 +761,26 @@
 	.dot.sel {
 		filter: drop-shadow(0 0 6px currentColor);
 	}
-	.span {
-		opacity: 0.32;
-		stroke: var(--marker-stroke);
-		stroke-width: 1;
+	/* Neighbourhood span brace: a curly brace floating in the gap above the band, marking a collapsed
+	   family's extent. Drawn in a neutral annotation tone (--brace: near-white in dark, a quiet ink
+	   in light) so it reads as an annotation over the data, not a coloured data bar. */
+	.group-bracket {
 		cursor: zoom-in;
+	}
+	.bracket-hit {
+		fill: transparent;
+	}
+	.bracket {
+		fill: none;
+		stroke: var(--brace);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		opacity: 0.7;
 		transition: opacity 0.12s;
 	}
-	.span:hover {
-		opacity: 0.5;
+	.group-bracket:hover .bracket {
+		opacity: 1;
 	}
 	/* Faint bridge across the unused gap between a split allocation's occupied segments, so the
 	   two bars read as one service rather than two unrelated bands. */

@@ -142,7 +142,10 @@
 			right: 0;
 			width: auto;
 			height: auto;
-			max-height: 78dvh;
+			/* Rise only to just under the spectrum card's bottom edge (measured into --card-bottom by
+			   the page), leaving a 14px margin; taller content scrolls within. The 78dvh fallback keeps
+			   the prior behaviour if the measurement hasn't landed yet. */
+			max-height: min(78dvh, calc(100dvh - var(--card-bottom, 22dvh) - 14px));
 			border-radius: 18px 18px 0 0;
 			box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.3);
 			transform: translateY(102%);

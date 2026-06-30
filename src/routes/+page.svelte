@@ -35,6 +35,28 @@
 	let width = $state(0);
 	let zoomed = $derived($view.zoom > 1);
 
+	// Mobile bottom-sheet ceiling: track the spectrum card's bottom edge so the info sheet can rise
+	// to just under it (never overlapping the number line) and scroll internally beyond that. Exposed
+	// as a CSS var the drawer reads; harmless on desktop where the drawer is a full-height side sheet.
+	let cardEl = $state<HTMLElement>();
+	$effect(() => {
+		if (!browser || !cardEl) return;
+		const update = () => {
+			const bottom = Math.round(cardEl!.getBoundingClientRect().bottom);
+			document.documentElement.style.setProperty('--card-bottom', `${bottom}px`);
+		};
+		update();
+		const ro = new ResizeObserver(update);
+		ro.observe(cardEl);
+		window.addEventListener('resize', update);
+		window.addEventListener('scroll', update, { passive: true });
+		return () => {
+			ro.disconnect();
+			window.removeEventListener('resize', update);
+			window.removeEventListener('scroll', update);
+		};
+	});
+
 	// Announce the visible window to assistive tech (polite live region).
 	let announcement = $derived(
 		`Showing ${fmtFreq(10 ** $visibleDomain.minExp)} to ${fmtFreq(10 ** $visibleDomain.maxExp)}.`
@@ -142,7 +164,7 @@
      unpins it (see onclose), so the space is always reclaimed. -->
 <div class="layout" class:pinned={$inspectorPinned}>
 	<main>
-		<section class="card">
+		<section class="card" bind:this={cardEl}>
 			<ThemeToggle />
 			<header>
 				<div>
