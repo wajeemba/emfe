@@ -27,6 +27,10 @@ export interface Family {
 	label: string;
 	/** Compact label for the on-axis chip. */
 	short: string;
+	/** The short label spelled out — what the acronym/band name stands for. */
+	name: string;
+	/** A sentence or two: what this neighbourhood is and what it's generally used for. */
+	blurb: string;
 	lo: number;
 	hi: number;
 }
@@ -37,16 +41,73 @@ export interface Family {
  * optical/ionising regions map one family per region.
  */
 export const FAMILIES: readonly Family[] = [
-	{ id: 'elf', label: 'ELF & power-frequency', short: 'ELF', lo: 1, hi: 1e4 },
-	{ id: 'vlf-lf', label: 'VLF/LF: time & navigation', short: 'VLF/LF', lo: 1e4, hi: 9e5 },
-	{ id: 'mf-hf', label: 'MF/HF: AM, shortwave & ham', short: 'MF/HF', lo: 9e5, hi: 3e7 },
-	{ id: 'vhf', label: 'VHF: FM, TV, air & marine', short: 'VHF', lo: 3e7, hi: 3e8 },
-	{ id: 'uhf', label: 'UHF: TV, cellular & ISM', short: 'UHF', lo: 3e8, hi: 1e9 },
-	{ id: 'lband', label: 'L-band: GNSS & aeronautical', short: 'L-band', lo: 1e9, hi: 1.7e9 },
+	{
+		id: 'elf',
+		label: 'ELF & power-frequency',
+		short: 'ELF',
+		name: 'Extremely low frequency',
+		blurb:
+			"The slowest radio waves — from a few hertz up to ~10 kHz. The 50/60 Hz hum of the power grid lives here, alongside the Earth–ionosphere Schumann resonances and the enormous antennas navies use to reach submarines underwater.",
+		lo: 1,
+		hi: 1e4
+	},
+	{
+		id: 'vlf-lf',
+		label: 'VLF/LF: time & navigation',
+		short: 'VLF/LF',
+		name: 'Very low / low frequency',
+		blurb:
+			'Long waves (10–900 kHz) that hug the curve of the Earth and slip into seawater. Used for time-standard broadcasts (the atomic clocks behind radio-controlled watches), maritime and aeronautical navigation beacons, and submarine comms.',
+		lo: 1e4,
+		hi: 9e5
+	},
+	{
+		id: 'mf-hf',
+		label: 'MF/HF: AM, shortwave & ham',
+		short: 'MF/HF',
+		name: 'Medium / high frequency',
+		blurb:
+			"AM broadcast (medium wave) and shortwave (high frequency), 0.9–30 MHz. HF bounces off the ionosphere to skip around the planet — which is why shortwave, CB, and amateur 'ham' operators can reach the far side of the world.",
+		lo: 9e5,
+		hi: 3e7
+	},
+	{
+		id: 'vhf',
+		label: 'VHF: FM, TV, air & marine',
+		short: 'VHF',
+		name: 'Very high frequency',
+		blurb:
+			'30–300 MHz: FM radio, the lower broadcast-TV channels, air-traffic control and marine voice radio, and NOAA weather stations. Mostly line-of-sight signals that stop at the horizon.',
+		lo: 3e7,
+		hi: 3e8
+	},
+	{
+		id: 'uhf',
+		label: 'UHF: TV, cellular & ISM',
+		short: 'UHF',
+		name: 'Ultra high frequency',
+		blurb:
+			'300 MHz–1 GHz: upper TV channels, early mobile phones, walkie-talkies, garage remotes, RFID tags, and the 433/900 MHz ISM bands countless gadgets share.',
+		lo: 3e8,
+		hi: 1e9
+	},
+	{
+		id: 'lband',
+		label: 'L-band: GNSS & aeronautical',
+		short: 'L-band',
+		name: 'L-band',
+		blurb:
+			'1–1.7 GHz. GPS and other satellite navigation, aircraft transponders and radar, satellite radio, and satellite phones. It penetrates clouds and foliage well, which is why GNSS lives here.',
+		lo: 1e9,
+		hi: 1.7e9
+	},
 	{
 		id: 'sband-low',
 		label: 'S-band: cellular & 2.4 GHz ISM',
 		short: 'S-band',
+		name: 'S-band',
+		blurb:
+			'1.7–2.7 GHz. The 2.4 GHz ISM band — Wi-Fi, Bluetooth, microwave ovens, cordless gear — plus a great deal of cellular (3G/4G/5G mid-band) and weather radar.',
 		lo: 1.7e9,
 		hi: 2.7e9
 	},
@@ -54,18 +115,98 @@ export const FAMILIES: readonly Family[] = [
 		id: 'sc-band',
 		label: 'S/C-band: radar, Wi-Fi & satellite',
 		short: 'C-band',
+		name: 'S / C-band',
+		blurb:
+			"2.7–7 GHz. 5 GHz Wi-Fi, airport and weather radar, and satellite uplinks. The 'C-band' satellite range here is being re-farmed for 5G.",
 		lo: 2.7e9,
 		hi: 7e9
 	},
-	{ id: 'xku-band', label: 'X/Ku-band: radar & satellite TV', short: 'X/Ku', lo: 7e9, hi: 1.8e10 },
-	{ id: 'k-band', label: 'K-band: mmWave & satellite', short: 'K-band', lo: 1.8e10, hi: 4e10 },
-	{ id: 'ehf', label: 'EHF: WiGig & automotive radar', short: 'EHF', lo: 4e10, hi: 3e11 },
-	{ id: 'ir', label: 'Infrared', short: 'Infrared', lo: 3e11, hi: 4e14 },
-	{ id: 'visible', label: 'Visible light', short: 'Visible', lo: 4e14, hi: 7.9e14 },
-	{ id: 'uv', label: 'Ultraviolet', short: 'Ultraviolet', lo: 7.9e14, hi: 3e16 },
-	{ id: 'xray', label: 'X-ray', short: 'X-ray', lo: 3e16, hi: 3e19 },
-	{ id: 'gamma', label: 'Gamma rays', short: 'Gamma', lo: 3e19, hi: 1e24 }
+	{
+		id: 'xku-band',
+		label: 'X/Ku-band: radar & satellite TV',
+		short: 'X/Ku',
+		name: 'X / Ku-band',
+		blurb:
+			'7–18 GHz. Military, weather, and marine radar; satellite-TV downlinks and VSAT terminals. Short wavelengths mean small dishes and sharp, narrow radar beams.',
+		lo: 7e9,
+		hi: 1.8e10
+	},
+	{
+		id: 'k-band',
+		label: 'K-band: mmWave & satellite',
+		short: 'K-band',
+		name: 'K-band',
+		blurb:
+			"18–30 GHz. Satellite links, police speed radar, and the lower 5G millimetre-wave bands. The middle (the 'K' absorption peak) is partly blocked by atmospheric water vapour.",
+		lo: 1.8e10,
+		hi: 3e10
+	},
+	{
+		id: 'ehf',
+		label: 'EHF: WiGig & automotive radar',
+		short: 'EHF',
+		name: 'Extremely high frequency',
+		blurb:
+			"30–300 GHz, the 'millimetre wave' band. 60 GHz WiGig, 77 GHz automotive collision-avoidance radar, 5G mmWave, airport body scanners, and radio astronomy. Huge capacity, but short range.",
+		lo: 3e10,
+		hi: 3e11
+	},
+	{
+		id: 'ir',
+		label: 'Infrared',
+		short: 'Infrared',
+		name: 'Infrared',
+		blurb:
+			'Light just beyond red, felt as heat. TV remotes, fibre-optic internet, thermal cameras and night vision, and the warmth radiating from every warm object.',
+		lo: 3e11,
+		hi: 4e14
+	},
+	{
+		id: 'visible',
+		label: 'Visible light',
+		short: 'Visible',
+		name: 'Visible light',
+		blurb:
+			'The single octave our eyes evolved to see — red through violet. Lasers, LEDs, displays, and the colours of the world. A sliver of the whole spectrum.',
+		lo: 4e14,
+		hi: 7.9e14
+	},
+	{
+		id: 'uv',
+		label: 'Ultraviolet',
+		short: 'Ultraviolet',
+		name: 'Ultraviolet',
+		blurb:
+			"Beyond violet. Sterilising lamps, fluorescence and 'black light', vitamin-D and sunburn. Near the top, photons gain enough energy to start ionising atoms.",
+		lo: 7.9e14,
+		hi: 3e16
+	},
+	{
+		id: 'xray',
+		label: 'X-ray',
+		short: 'X-ray',
+		name: 'X-rays',
+		blurb:
+			'Ionising radiation that passes through soft tissue. Medical and dental imaging, airport security scanners, and crystallography that maps molecules atom by atom.',
+		lo: 3e16,
+		hi: 3e19
+	},
+	{
+		id: 'gamma',
+		label: 'Gamma rays',
+		short: 'Gamma',
+		name: 'Gamma rays',
+		blurb:
+			'The most energetic light, from nuclear decay and cosmic cataclysms. Cancer radiotherapy, equipment sterilisation, and PET scans. Deeply ionising — the signature of the violent universe.',
+		lo: 3e19,
+		hi: 1e24
+	}
 ] as const;
+
+/** Look up a family by id (e.g. from a `grp-<id>` group item). */
+export function familyById(id: string): Family | undefined {
+	return FAMILIES.find((f) => f.id === id);
+}
 
 /** The family containing a frequency (Hz), or `undefined` if outside every family. */
 export function familyOf(hz: number): Family | undefined {

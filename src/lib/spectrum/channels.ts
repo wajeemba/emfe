@@ -337,7 +337,7 @@ export function planFor(id: string): ChannelPlan | undefined {
  * calling channel — is just one line, so it's promoted to appear far earlier, as soon as its band
  * is a recognizable bar rather than a sliver. Tune both here; everything downstream reads them.
  */
-export const CHANNEL_REVEAL_PX = { landmark: 16, full: 160 } as const;
+export const CHANNEL_REVEAL_PX = { landmark: 44, full: 160 } as const;
 
 /**
  * The on-screen band width (px) at which a given channel reveals — a generalisation of the old

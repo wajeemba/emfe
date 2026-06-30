@@ -62,7 +62,7 @@ describe('placeChannels', () => {
 	});
 
 	it('promotes the emergency channel: its red tick reveals before the full grid does', () => {
-		// A mid zoom where the CB band spans ~50px — past the landmark threshold (16) but well
+		// A mid zoom where the CB band spans ~50px — past the landmark threshold (44) but well
 		// short of the full-grid one (160), so only channel 9 should be revealed.
 		const mid = { minExp: 7.398, maxExp: 7.538 };
 		const placed = placeChannels(cb, cbBand, mid, 1000);

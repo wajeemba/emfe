@@ -1,19 +1,18 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { logPos, type FreqDomain, FULL_DOMAIN, decades } from '$lib/spectrum/scale';
+	import { logPos, type FreqDomain } from '$lib/spectrum/scale';
 	import { visibleAllocations, effectiveLayer } from '$lib/spectrum/filter';
-	import { layoutSpectrum, type PlacedItem } from '$lib/spectrum/grouping';
+	import { layoutSpectrum, familyById, type PlacedItem } from '$lib/spectrum/grouping';
 	import { licenseRank, type Allocation } from '$lib/data/types';
 	import { fmtFreq } from '$lib/spectrum/format';
 	import { spectralColor } from '$lib/spectrum/color';
 	import { LICENSE_ICON, privilegeBands, hasPrivilegePlan } from '$lib/spectrum/license';
 	import { planFor, CHANNEL_REVEAL_PX } from '$lib/spectrum/channels';
-	import { clampCenter, clampZoom } from '$lib/spectrum/zoom';
 	import { allocations } from '$lib/data/loader';
 	import type { LayerId, LicenseRank } from '$lib/data/types';
 	import { select, gasIsolated } from '$lib/state/selection';
-	import { jumpTo } from '$lib/state/view';
+	import { selectGroup } from '$lib/state/group';
 	import { visibleGroups } from '$lib/state/visible';
 	import { PLOT } from './plot-layout';
 
@@ -35,32 +34,31 @@
 	const LANE_Y = [6, 33, 60];
 	/** Callout dots sit on the vertical centre line of the coloured band. */
 	const bandMid = PLOT.bandY + PLOT.bandH / 2;
-	/** A neighbourhood (collapsed family) is annotated by a curly brace floating in the gap above the
+	/** A neighbourhood (collapsed family) is annotated by a flat bracket floating in the gap above the
 	 *  band — never touching it — rather than a translucent bar laid over the gradient. That leaves
-	 *  the gradient and the member dots uncovered, so the brace reads as a grouping annotation, not
-	 *  another data bar. The brace's arms (its lowest points) clear the band by {@link GROUP_BRACE_GAP}
-	 *  px; its centre nub points up to the chip's connector. */
-	const GROUP_BRACE_GAP = 7;
-	/** y of the brace arms (its widest, lowest line); the nub rises {@link GROUP_BRACE_DEPTH} above. */
-	const GROUP_BRACE_Y = PLOT.bandY - GROUP_BRACE_GAP;
-	/** How far the brace's centre nub projects up from the arms toward the label. */
-	const GROUP_BRACE_DEPTH = 7;
+	 *  the gradient and the member dots uncovered, so the bracket reads as a grouping annotation, not
+	 *  another data bar. A straight horizontal line marks the extent; its rounded ends turn down
+	 *  toward the band, and the chip's connector meets its centre. */
+	const GROUP_BRACKET_Y = PLOT.bandY - 11;
+	/** How far the bracket's rounded ends turn down toward the band. */
+	const GROUP_BRACKET_DROP = 5;
+	/** Inset each bracket's ends from the family extent, so adjacent brackets show a small gap. */
+	const GROUP_BRACKET_INSET = 4;
+	/** Corner radius where the horizontal line turns down into its end-caps. */
+	const GROUP_BRACKET_R = 3;
 
 	/**
-	 * SVG path for a horizontal curly brace from x=`lo` to x=`hi` along y=`y`, with the centre nub
-	 * projecting `depth` px upward. The two end-curls and the centre cusp scale with `depth`, so a
-	 * wide family reads as a long, gently-curled brace and a tight one as a compact one. (Canonical
-	 * two-arc curly-brace construction; the nub is centred.)
+	 * SVG path for a flat bracket spanning x=`lo`…`hi`: a straight horizontal line at
+	 * {@link GROUP_BRACKET_Y} whose rounded ends turn down toward the band. Ends are inset so
+	 * neighbouring brackets don't touch.
 	 */
-	function curlyBrace(lo: number, hi: number, y: number, depth: number): string {
-		const len = hi - lo || 1;
-		const cx = (lo + hi) / 2;
-		const mid = y - depth / 2; // control level for the half-arcs
-		const ny = y - depth; // nub tip (points up toward the label)
-		return (
-			`M${lo} ${y} Q${lo} ${mid} ${lo + 0.25 * len} ${mid} T${cx} ${ny} ` +
-			`M${hi} ${y} Q${hi} ${mid} ${hi - 0.25 * len} ${mid} T${cx} ${ny}`
-		);
+	function groupBracket(lo: number, hi: number): string {
+		const left = lo + GROUP_BRACKET_INSET;
+		const right = hi - GROUP_BRACKET_INSET;
+		const y = GROUP_BRACKET_Y;
+		const cap = y + GROUP_BRACKET_DROP;
+		const r = Math.min(GROUP_BRACKET_R, (right - left) / 2 - 0.5);
+		return `M${left} ${cap} Q${left} ${y} ${left + r} ${y} L${right - r} ${y} Q${right} ${y} ${right} ${cap}`;
 	}
 	/** A real-bandwidth bar replaces the dot once the allocation's band is at least this wide. */
 	const MIN_BAR_PX = 7;
@@ -303,21 +301,13 @@
 			.sort((a, b) => barWidth(b.alloc) - barWidth(a.alloc))
 	);
 
-	/** Click a group chip → frame that neighbourhood (drill down a tier). */
-	function zoomToFamily(item: PlacedItem) {
-		const lo = item.members[0].hz;
-		const hi = item.members[item.members.length - 1].hz;
-		const loE = Math.log10(lo);
-		const hiE = Math.log10(hi);
-		const span = Math.max(hiE - loE, 0.2) * 1.4; // pad so the cluster isn't edge-to-edge
-		const zoom = clampZoom(decades(FULL_DOMAIN) / span);
-		const centerExp = clampCenter((loE + hiE) / 2, FULL_DOMAIN, zoom);
-		jumpTo({ centerExp, zoom });
-	}
-
+	/** Click a group brace/chip → open its info card (what the band name means + typical uses).
+	 *  A stale `grp-<id>` with no matching family simply does nothing. */
 	function activate(item: PlacedItem) {
-		if (item.kind === 'group') zoomToFamily(item);
-		else select(item.id);
+		if (item.kind === 'group') {
+			const fam = familyById(item.id.replace(/^grp-/, ''));
+			if (fam) selectGroup(fam);
+		} else select(item.id);
 	}
 
 	function onKey(e: KeyboardEvent, item: PlacedItem) {
@@ -501,27 +491,24 @@
 	{/if}
 {/snippet}
 
-<!-- Layer 1 — neighbourhood braces. A curly brace floating above the band marks the family's extent
-     without covering the gradient or its member dots (the labelled chip in layer 3 is the real
-     button; this stays a mouse target but is hidden from assistive tech to avoid a double
+<!-- Layer 1 — neighbourhood brackets. A flat bracket floating above the band marks the family's
+     extent without covering the gradient or its member dots (the labelled chip in layer 3 is the
+     real button; this stays a mouse target but is hidden from assistive tech to avoid a double
      announcement). -->
 {#each groupItems as p (p.item.id)}
 	{@const item = p.item}
 	{@const lo = Math.max(item.loX, 2)}
 	{@const hi = Math.min(item.hiX, width - 2)}
 	<g class="group-bracket" aria-hidden="true" onclick={() => activate(item)}>
-		<!-- Transparent hit target spanning the brace down to the band, for the zoom-in affordance. -->
+		<!-- Transparent hit target spanning the bracket down to the band, for the click affordance. -->
 		<rect
 			x={lo}
-			y={GROUP_BRACE_Y - GROUP_BRACE_DEPTH - 2}
+			y={GROUP_BRACKET_Y - 2}
 			width={Math.max(hi - lo, 2)}
-			height={PLOT.bandY - GROUP_BRACE_Y + GROUP_BRACE_DEPTH + 2}
+			height={PLOT.bandY - GROUP_BRACKET_Y + 2}
 			class="bracket-hit"
 		/>
-		<path
-			d={curlyBrace(lo, hi, GROUP_BRACE_Y, GROUP_BRACE_DEPTH)}
-			class="bracket"
-		/>
+		<path d={groupBracket(lo, hi)} class="bracket" />
 	</g>
 {/each}
 
@@ -577,13 +564,7 @@
 		onclick={() => activate(item)}
 		onkeydown={(e) => onKey(e, item)}
 	>
-		<line
-			x1={item.x}
-			y1={p.lineTop}
-			x2={item.x}
-			y2={GROUP_BRACE_Y - GROUP_BRACE_DEPTH}
-			class="line group-line"
-		/>
+		<line x1={item.x} y1={p.lineTop} x2={item.x} y2={GROUP_BRACKET_Y} class="line group-line" />
 		<text x={item.x} y={p.nameY} text-anchor="middle" class="name" data-mk={item.id}
 			>{item.label}</text
 		>
@@ -655,7 +636,7 @@
 		cursor: pointer;
 	}
 	.marker.group {
-		cursor: zoom-in;
+		cursor: pointer;
 	}
 	.marker:focus-visible {
 		outline: none;
@@ -761,11 +742,11 @@
 	.dot.sel {
 		filter: drop-shadow(0 0 6px currentColor);
 	}
-	/* Neighbourhood span brace: a curly brace floating in the gap above the band, marking a collapsed
+	/* Neighbourhood bracket: a flat bracket floating in the gap above the band, marking a collapsed
 	   family's extent. Drawn in a neutral annotation tone (--brace: near-white in dark, a quiet ink
 	   in light) so it reads as an annotation over the data, not a coloured data bar. */
 	.group-bracket {
-		cursor: zoom-in;
+		cursor: pointer;
 	}
 	.bracket-hit {
 		fill: transparent;

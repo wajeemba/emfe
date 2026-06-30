@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { view, visibleDomain, resetView, undoView } from '$lib/state/view';
 	import { selection, selectedAllocation, clearSelection, gasIsolated } from '$lib/state/selection';
+	import { groupSelection, clearGroup } from '$lib/state/group';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
 	import { theme } from '$lib/state/theme';
@@ -24,6 +25,7 @@
 	import Dock from '$lib/components/Dock.svelte';
 	import InspectorDrawer from '$lib/components/InspectorDrawer.svelte';
 	import SubstrateInfo from '$lib/components/SubstrateInfo.svelte';
+	import GroupInfo from '$lib/components/GroupInfo.svelte';
 	import LayerToggles from '$lib/components/LayerToggles.svelte';
 	import LicenseFilter from '$lib/components/LicenseFilter.svelte';
 	import VisibleFilter from '$lib/components/VisibleFilter.svelte';
@@ -106,10 +108,20 @@
 		prev = snap;
 	});
 
-	// The marker inspector and the substrate info card are both right-hand sheets — only one shows
-	// at a time. Selecting a marker closes the band card; picking a band (below) closes the marker.
+	// The marker inspector, the group explainer, and the substrate band card are all right-hand
+	// sheets — only one shows at a time. Selecting a marker closes the other two; opening the group
+	// card closes the marker + band (band pick clears the others inline, below).
 	$effect(() => {
-		if ($selection) clearBand();
+		if ($selection) {
+			clearBand();
+			clearGroup();
+		}
+	});
+	$effect(() => {
+		if ($groupSelection) {
+			clearSelection();
+			clearBand();
+		}
 	});
 
 	// Selecting a gas/discharge re-isolates its spectrum (dims the others).
@@ -145,16 +157,87 @@
 		selection.set(s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null);
 		prev = snapshot();
 	}
+
+	// Structured data for search engines and AI assistants. Describes the tool as a free
+	// WebApplication and the underlying U.S. (FCC) spectrum allocations as a Dataset — both
+	// linked to Exagrow as publisher. Serialized into <script type="application/ld+json"> in
+	// <svelte:head> below (the tag is assembled there to avoid a literal closing tag here).
+	const jsonLd = {
+		'@context': 'https://schema.org',
+		'@graph': [
+			{
+				'@type': 'WebApplication',
+				'@id': 'https://emfe.exagrow.com/#app',
+				name: 'EM Frequency Explorer',
+				url: 'https://emfe.exagrow.com/',
+				applicationCategory: 'EducationalApplication',
+				applicationSubCategory: 'Reference',
+				operatingSystem: 'Any (modern web browser)',
+				browserRequirements: 'Requires JavaScript and a modern browser.',
+				description:
+					'An interactive, zoomable explorer for the electromagnetic spectrum — from below ELF through radio, light, X-ray and gamma, on one logarithmic frequency axis, with U.S. (FCC) allocations and licences.',
+				isAccessibleForFree: true,
+				offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+				inLanguage: 'en',
+				image: 'https://emfe.exagrow.com/og-image.png',
+				publisher: { '@type': 'Organization', name: 'Exagrow', url: 'https://exagrow.com/' },
+				about: { '@id': 'https://emfe.exagrow.com/#dataset' }
+			},
+			{
+				'@type': 'Dataset',
+				'@id': 'https://emfe.exagrow.com/#dataset',
+				name: 'U.S. Electromagnetic Spectrum Allocations',
+				description:
+					'Frequency allocations and licence classes across the electromagnetic spectrum for the United States, derived from the FCC tables and presented on a continuous logarithmic frequency axis.',
+				url: 'https://emfe.exagrow.com/',
+				license: 'https://www.apache.org/licenses/LICENSE-2.0',
+				isAccessibleForFree: true,
+				creator: { '@type': 'Organization', name: 'Exagrow', url: 'https://exagrow.com/' },
+				keywords: [
+					'electromagnetic spectrum',
+					'radio frequency allocation',
+					'FCC spectrum',
+					'frequency bands',
+					'amateur radio',
+					'spectrum licensing'
+				]
+			}
+		]
+	};
 </script>
 
 <svelte:window onpopstate={onPopState} onkeydown={onKeydown} onclick={onBackgroundClick} />
 
 <svelte:head>
-	<title>EM Frequency Explorer</title>
+	<title>EM Frequency Explorer — Electromagnetic Spectrum</title>
 	<meta
 		name="description"
 		content="An interactive, zoomable explorer for the electromagnetic spectrum — from below ELF through radio, light, X-ray and gamma, on one logarithmic frequency axis."
 	/>
+	<link rel="canonical" href="https://emfe.exagrow.com/" />
+	<meta name="robots" content="index, follow, max-image-preview:large" />
+
+	<!-- Open Graph / social + AI surfaces -->
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="EM Frequency Explorer" />
+	<meta property="og:title" content="EM Frequency Explorer — the whole electromagnetic spectrum, one scale" />
+	<meta
+		property="og:description"
+		content="Everything we broadcast, navigate by, and see — radio to gamma on one continuous logarithmic axis, with U.S. (FCC) allocations and licences."
+	/>
+	<meta property="og:url" content="https://emfe.exagrow.com/" />
+	<meta property="og:image" content="https://emfe.exagrow.com/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="EM Frequency Explorer" />
+	<meta
+		name="twitter:description"
+		content="An interactive, zoomable explorer for the electromagnetic spectrum — radio to gamma on one logarithmic axis, with U.S. (FCC) allocations."
+	/>
+	<meta name="twitter:image" content="https://emfe.exagrow.com/og-image.png" />
+
+	{@html `<` + `script type="application/ld+json">` + JSON.stringify(jsonLd) + `</` + `script>`}
 </svelte:head>
 
 <a href="#explorer" class="skip-link">Skip to the spectrum explorer</a>
@@ -218,6 +301,7 @@
 							admin={$substrateView.admin}
 							onpick={(b) => {
 								clearSelection();
+								clearGroup();
 								selectBand(b);
 							}}
 						/>
@@ -273,6 +357,8 @@
 	/>
 
 	<SubstrateInfo band={$substrateSelection} onclose={clearBand} />
+
+	<GroupInfo family={$groupSelection} onclose={clearGroup} />
 </div>
 
 <style>

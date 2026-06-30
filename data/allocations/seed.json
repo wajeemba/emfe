@@ -346,6 +346,7 @@
 		"hz": 27000000,
 		"band": [26965000, 27405000],
 		"layer": "amateur",
+		"altLayer": "consumer",
 		"region": "radio",
 		"minLod": 2,
 		"reqLicense": "unlicensed",
