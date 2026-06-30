@@ -1,4 +1,4 @@
-# EM Frequency Explorer
+# Emfe, the EM Frequency Explorer
 
 **From lightning to gamma rays.** More than twenty orders of magnitude on a
 single logarithmic ruler. Everything we broadcast, navigate by, cook with, and
