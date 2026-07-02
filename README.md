@@ -124,6 +124,34 @@ npm run test:e2e       # Playwright end-to-end (auto build + preview)
 npm run data:validate  # validate the allocation dataset against the schema
 ```
 
+## Deploy
+
+Two long-lived branches map to two Netlify environments with continuous
+deployment enabled:
+
+| Branch | Environment               | URL                              |
+| ------ | ------------------------- | -------------------------------- |
+| `dev`  | **staging / test deploy** | <https://dev--emfe.netlify.app/> |
+| `prod` | **production**            | <https://emfe.exagrow.com>       |
+
+`dev` is the test-deploy branch: pushing to it publishes to the staging URL so
+that an agent (or a human) can **close the loop** — run the app as deployed and
+do final verification that everything works as intended — before anything is
+promoted. Nothing reaches production without first being seen live on `dev`.
+
+The release process:
+
+1. Commit work on a `feature/…` (or `claude/…`) branch.
+2. Get all checks passing (`npm run check`, `npm test`, e2e) — rework until green.
+3. Open a PR into `dev`.
+4. Run the live smoke test against <https://dev--emfe.netlify.app/>, demonstrating
+   no errors and that all functionality works. _(Live test is still to be
+   written.)_ If rework is needed, iterate — back to step 1.
+5. The agent reports any anomalies and asks for approval.
+6. On approval, bump the version (semver) and merge to `main`.
+7. Cut the official GitHub release from `main`.
+8. Push `main` → `prod` to go live.
+
 ## Brand & style
 
 Visual identity carried over from the prototype (`moodboards/`):
