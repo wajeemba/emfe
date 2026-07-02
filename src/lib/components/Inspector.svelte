@@ -82,12 +82,11 @@
 <div class="inspector">
 	<div class="eyebrow">Inspector</div>
 
-	<div class="title">
-		<span class="name">{allocation.name}</span>
-		<span class="freq">{fmtFreq(allocation.hz)}</span>
-	</div>
+	<h2 class="name">{allocation.name}</h2>
 
 	<div class="meta">
+		<span class="freq">{fmtFreq(allocation.hz)}</span>
+		<span class="sep" aria-hidden="true">·</span>
 		{regionLabel(allocation.region)} · λ {fmtWavelengthOf(allocation.hz)}{$axisOptions.showEv
 			? ` · E ${fmtPhotonEv(allocation.hz)}`
 			: ''}{bandText ? ` · ${bandText}` : ''}
@@ -202,35 +201,33 @@
 </div>
 
 <style>
+	/* Header vocabulary shared with the neighbourhood + substrate cards: mono eyebrow, serif title,
+	   mono meta line. */
 	.eyebrow {
 		font-family: var(--font-mono);
 		font-size: 11px;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.12em;
 		color: var(--faint);
 		text-transform: uppercase;
-		margin-bottom: 10px;
-	}
-	.title {
-		display: flex;
-		align-items: baseline;
-		gap: 10px;
-		flex-wrap: wrap;
 	}
 	.name {
-		font-family: var(--font-sans);
-		font-size: 18px;
-		font-weight: 700;
-	}
-	.freq {
-		font-family: var(--font-mono);
-		font-size: 12px;
-		color: var(--sub);
+		margin: 4px 0 0;
+		font-family: var(--font-serif);
+		font-size: 23px;
+		font-weight: 500;
+		letter-spacing: -0.01em;
 	}
 	.meta {
 		font-family: var(--font-mono);
-		font-size: 12.5px;
+		font-size: 12px;
+		color: var(--faint);
+		margin: 8px 0 12px;
+	}
+	.meta .freq {
 		color: var(--sub);
-		margin: 3px 0 10px;
+	}
+	.meta .sep {
+		margin: 0 2px;
 	}
 	/* Neutral "what licence opens this band" badge — the held class is shown by which sub-bands
 	   light up on the chart and in the strip, so this no longer flips green/red by privilege. */
