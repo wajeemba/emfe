@@ -17,6 +17,7 @@
 		"test:unit": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"test:e2e": "playwright test",
+		"test:smoke": "playwright test --config playwright.smoke.config.ts",
 		"test:all": "npm run test && npm run test:e2e",
 		"data:validate": "node scripts/data-validate.ts",
 		"graph": "depcruise src --include-only ^src --output-type dot | dot -T svg -o graph.svg"

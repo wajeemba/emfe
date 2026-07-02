@@ -11,9 +11,16 @@
 
 	let { children } = $props();
 
-	// Keep the document theme attribute in sync with the store (browser only).
+	// Keep the document theme attribute in sync with the store (browser only) and persist the
+	// viewer's choice locally. Theme lives in localStorage — not the shareable URL — because colour
+	// scheme is a personal preference; a shared link opens in the recipient's own scheme.
 	$effect(() => {
 		document.documentElement.dataset.theme = $theme;
+		try {
+			localStorage.setItem('emfe-theme', $theme);
+		} catch {
+			/* private mode / storage disabled: fall back to in-memory only */
+		}
 	});
 </script>
 

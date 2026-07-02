@@ -87,6 +87,19 @@ export function toggleGroup(g: OpticalGroup): void {
 	if (turnedOn && !groupCovered(g, get(layers))) enableLayer(GROUP_LAYERS[g].home);
 }
 
+/**
+ * Apply a visibility snapshot verbatim (used when restoring a shared deep-link). Unlike the
+ * toggles, this touches no content layers — the link also carries the layer state, restored
+ * separately — but it *does* clear the auto-restore memory so the layers subscription above won't
+ * later spring the groups back to whatever was showing before the link loaded. Callers must set
+ * the layer state (`layers.set`) *before* this, so the subscription's blank-when-uncovered pass has
+ * already run against the restored layers by the time we stamp the intended groups on top.
+ */
+export function restoreGroups(g: GroupVisibility): void {
+	restore = null;
+	visibleGroups.set({ ...g });
+}
+
 /** The master switch: same minimal-cover rule as a single toggle, applied to every group. */
 export function setAllGroups(on: boolean): void {
 	restore = null;

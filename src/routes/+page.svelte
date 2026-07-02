@@ -2,14 +2,15 @@
 	import { browser } from '$app/environment';
 	import { view, visibleDomain, resetView, undoView } from '$lib/state/view';
 	import { selection, selectedAllocation, clearSelection, gasIsolated } from '$lib/state/selection';
-	import { groupSelection, clearGroup } from '$lib/state/group';
+	import { groupSelection, selectGroup, clearGroup } from '$lib/state/group';
 	import { layers } from '$lib/state/layers';
 	import { license } from '$lib/state/license';
-	import { theme } from '$lib/state/theme';
 	import { axisOptions } from '$lib/state/axis';
 	import { substrateView, substrateSelection, selectBand, clearBand } from '$lib/state/substrate';
+	import { visibleGroups, restoreGroups } from '$lib/state/visible';
 	import { inspectorPinned } from '$lib/state/inspector';
 	import { encodeState, decodeState, discreteChanged, type DeepLinkSnapshot } from '$lib/state/url';
+	import { cardToken, resolveCard } from '$lib/state/card';
 	import { allocations } from '$lib/data/loader';
 	import { FULL_DOMAIN } from '$lib/spectrum/scale';
 	import { fmtFreq } from '$lib/spectrum/format';
@@ -67,14 +68,40 @@
 	// ── Deep linking ────────────────────────────────────────────────────────────────────
 	// The URL query string is a lossless mirror of the view state (see state/url.ts).
 	function snapshot(): DeepLinkSnapshot {
+		// At most one details card is open (mutual exclusion is enforced below); encode whichever it is.
+		const card = cardToken(
+			$selection
+				? { kind: 'sig', id: $selection }
+				: $groupSelection
+					? { kind: 'grp', group: $groupSelection }
+					: $substrateSelection
+						? { kind: 'band', band: $substrateSelection }
+						: null
+		);
 		return {
 			centerExp: $view.centerExp,
 			zoom: $view.zoom,
 			layers: $layers,
 			license: $license,
-			theme: $theme,
-			selected: $selection
+			card,
+			visibleGroups: $visibleGroups,
+			admin: $substrateView.admin,
+			servicesOff: $substrateView.off,
+			axis: $axisOptions,
+			pinned: $inspectorPinned
 		};
+	}
+
+	// Reopen whichever card a deep-link encodes (marker / neighbourhood / substrate band), or none.
+	// Clears all three first so restore and back/forward can't leave a stale card up.
+	function applyCard(token: string | null): void {
+		const target = resolveCard(token);
+		clearSelection();
+		clearGroup();
+		clearBand();
+		if (target?.kind === 'sig') selection.set(target.id);
+		else if (target?.kind === 'grp') selectGroup(target.group);
+		else if (target?.kind === 'band') selectBand(target.band);
 	}
 
 	let restored = $state(false);
@@ -86,13 +113,19 @@
 		const params = new URLSearchParams(window.location.search);
 		const s = decodeState(params, FULL_DOMAIN);
 		view.set({ centerExp: s.centerExp, zoom: s.zoom });
+		// Layers first: the visible-light filter's auto-collapse subscription keys off them, so its
+		// blank-when-uncovered pass must run against the restored layers *before* we stamp the
+		// intended optical groups on top (restoreGroups also clears that subscription's memory).
 		layers.set(s.layers);
+		restoreGroups(s.visibleGroups);
 		license.set(s.license);
-		// Only the explicit deep-link theme overrides the OS preference already applied in <head>.
-		if (params.has('t')) theme.set(s.theme);
-		const sel = s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null;
-		selection.set(sel);
-		prev = { ...s, selected: sel, theme: $theme };
+		substrateView.set({ admin: s.admin, off: s.servicesOff });
+		axisOptions.set(s.axis);
+		inspectorPinned.set(s.pinned);
+		// Theme is intentionally not restored from the URL — it's a per-viewer preference already
+		// applied from localStorage / OS by the <head> bootstrap (see state/url.ts, state/theme.ts).
+		applyCard(s.card);
+		prev = snapshot();
 		restored = true;
 	});
 
@@ -152,9 +185,13 @@
 		const s = decodeState(new URLSearchParams(window.location.search), FULL_DOMAIN);
 		view.set({ centerExp: s.centerExp, zoom: s.zoom });
 		layers.set(s.layers);
+		restoreGroups(s.visibleGroups);
 		license.set(s.license);
-		theme.set(s.theme);
-		selection.set(s.selected && allocations.some((a) => a.id === s.selected) ? s.selected : null);
+		substrateView.set({ admin: s.admin, off: s.servicesOff });
+		axisOptions.set(s.axis);
+		inspectorPinned.set(s.pinned);
+		// Theme is not part of the deep-link (see restore effect above); leave the viewer's own scheme.
+		applyCard(s.card);
 		prev = snapshot();
 	}
 
