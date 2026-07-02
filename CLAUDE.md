@@ -40,7 +40,7 @@ strip (y 118→141, above the marker mid-line at 147) for in-band captions.
 
 Allocations are JSON in `data/allocations/*.json`, glob-imported at build (`src/lib/data/loader.ts`)
 — edits hot-reload. Dual-membership ("dual licence") is `altLayer` on an entry: it then shows when
-*either* layer is on and colours by `effectiveLayer` (primary wins when its toggle is on).
+_either_ layer is on and colours by `effectiveLayer` (primary wins when its toggle is on).
 
 ## Checks
 

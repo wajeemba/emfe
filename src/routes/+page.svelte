@@ -277,6 +277,7 @@
 	/>
 	<meta name="twitter:image" content="https://emfe.exagrow.com/og-image.png" />
 
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- jsonLd is a static, developer-controlled object; JSON.stringify has no user input, so no XSS surface. -->
 	{@html `<` + `script type="application/ld+json">` + JSON.stringify(jsonLd) + `</` + `script>`}
 </svelte:head>
 
