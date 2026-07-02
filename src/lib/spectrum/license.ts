@@ -217,6 +217,42 @@ export function privilegeStrip(allocationId: string, held: LicenseRank): Rendere
 	return segments.map((s) => ({ ...s, enabled: have >= licenseRank(s.minLicense) }));
 }
 
+/**
+ * Transmitter-power ceilings (47 CFR §97.313). Every amateur band allows the 1500 W PEP legal
+ * limit unless a stricter figure applies, so only the exceptions are tabulated. The EIRP/ERP
+ * bands quote effective radiated power (what leaves the antenna), not raw transmitter output.
+ */
+const LEGAL_MAX_POWER = '1500 W PEP';
+
+/** Bands whose ceiling is lower than the legal limit for *every* class, keyed by allocation id. */
+const HAM_POWER_EXCEPTIONS: Record<string, string> = {
+	ham2200m: '1 W EIRP', // 135.7–137.8 kHz
+	ham630m: '5 W EIRP', // 472–479 kHz
+	ham60m: '100 W ERP', // per channel, referenced to a half-wave dipole
+	ham30m: '200 W PEP' // 10.100–10.150 MHz, all classes
+};
+
+/**
+ * Bands where a Technician (folding in the closed Novice class) is held to 200 W PEP on the
+ * Novice/Technician HF segment, even though General/Extra may run the legal limit there
+ * (§97.313(c)): the bottom of 80, 40, 15 and 10 m.
+ */
+const TECH_200W_BANDS = new Set(['ham80m', 'ham40m', 'ham15m', 'ham10m']);
+
+/**
+ * The maximum transmitter power to show for an amateur band and held class — the §97.313 ceiling
+ * that caps output *before* the always-on "use the minimum necessary" rule ({@link MIN_POWER_NOTE}).
+ * Empty string for non-amateur allocations (Part 95 services set their own limits elsewhere).
+ */
+export function powerLimit(id: string, held: LicenseRank): string {
+	if (!(id.startsWith('ham') || id === '2m')) return '';
+	if (held === 'technician' && TECH_200W_BANDS.has(id)) return '200 W PEP';
+	return HAM_POWER_EXCEPTIONS[id] ?? LEGAL_MAX_POWER;
+}
+
+/** The universal §97.313(a) reminder, shown alongside every amateur band's power ceiling. */
+export const MIN_POWER_NOTE = 'Use the minimum power needed to make contact (§97.313)';
+
 /** Summary note shown beneath the privilege strip, keyed to the held license. */
 export function privilegeNote(held: LicenseRank): string {
 	switch (held) {

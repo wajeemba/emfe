@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	hasPrivilegePlan,
+	powerLimit,
 	privilegeBands,
 	privilegeNote,
 	privilegeStrip,
@@ -137,6 +138,38 @@ describe('privilegeStrip', () => {
 		]) {
 			expect(HAM_SUBBANDS[id]?.length).toBeGreaterThan(0);
 		}
+	});
+});
+
+describe('powerLimit', () => {
+	it('defaults to the 1500 W PEP legal limit on a full-privilege HF band', () => {
+		expect(powerLimit('ham20', 'general')).toBe('1500 W PEP');
+		expect(powerLimit('ham17m', 'extra')).toBe('1500 W PEP');
+	});
+
+	it('caps 30 m at 200 W PEP for every class', () => {
+		expect(powerLimit('ham30m', 'general')).toBe('200 W PEP');
+		expect(powerLimit('ham30m', 'extra')).toBe('200 W PEP');
+	});
+
+	it('quotes the ERP/EIRP ceilings on 60 m and the LF/VLF bands', () => {
+		expect(powerLimit('ham60m', 'general')).toBe('100 W ERP');
+		expect(powerLimit('ham630m', 'technician')).toBe('5 W EIRP');
+		expect(powerLimit('ham2200m', 'technician')).toBe('1 W EIRP');
+	});
+
+	it('holds a Technician to 200 W on their HF segments but full power on VHF', () => {
+		for (const id of ['ham80m', 'ham40m', 'ham15m', 'ham10m']) {
+			expect(powerLimit(id, 'technician')).toBe('200 W PEP');
+			expect(powerLimit(id, 'general')).toBe('1500 W PEP');
+		}
+		// A Technician runs the legal limit on 2 m — the 200 W cap is HF-segment-specific.
+		expect(powerLimit('2m', 'technician')).toBe('1500 W PEP');
+	});
+
+	it('is empty for non-amateur allocations', () => {
+		expect(powerLimit('cb', 'unlicensed')).toBe('');
+		expect(powerLimit('wifi', 'extra')).toBe('');
 	});
 });
 
