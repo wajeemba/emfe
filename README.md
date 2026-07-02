@@ -144,9 +144,12 @@ The release process:
 1. Commit work on a `feature/…` (or `claude/…`) branch.
 2. Get all checks passing (`npm run check`, `npm test`, e2e) — rework until green.
 3. Open a PR into `dev`.
-4. Run the live smoke test against <https://dev--emfe.netlify.app/>, demonstrating
-   no errors and that all functionality works. _(Live test is still to be
-   written.)_ If rework is needed, iterate — back to step 1.
+4. Run the live smoke test against the `dev` deploy: `npm run test:smoke`. It loads
+   the real deployment and checks it comes up clean (no console/page errors), that a
+   shared deep-link reproduces the view, and that the controls respond. Point it at a
+   different environment with `SMOKE_URL=…` (e.g. a Netlify deploy-preview, or
+   `https://emfe.exagrow.com` to smoke prod). If rework is needed, iterate — back to
+   step 1.
 5. The agent reports any anomalies and asks for approval.
 6. On approval, bump the version (semver) and merge to `main`.
 7. Cut the official GitHub release from `main`.
